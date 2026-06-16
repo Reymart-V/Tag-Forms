@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Tag Request Form</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    ol li {
+      line-height: 1.8;
+    }
+    th {
+      background-color: #f4f4f4;
+      position: sticky;
+      top: 0;
+    }
+    .table-container {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    #submitButton {
+      background-color: #28a745; 
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+    }
+    .error {
+      border: 2px solid red;
+    }
+    .error-message {
+      color: red;
+      font-size: 0.8em;
+      margin-top: 2px;
+    }
+    .warning-message {
+      color: orange;
+      font-size: 0.8em;
+      margin-top: 2px;
+    }
+    .duplicate-tag {
+      background-color: red !important;
+    }
+    #pasteArea {
+      width: 100%;
+      height: 100px;
+      margin: 10px 0;
+    }
+    .button-group {
+      margin: 10px 0;
+    }
+    input, select, textarea {
+      box-sizing: border-box;
+      font-size: 1em;
+    }
+    select {
+      padding: 4px;
+      width: 100%;
+    }
+    input {
+      padding: 4px;
+      width: 100%;
+    }
+    #millWarning {
+      color: red;
+      font-weight: bold;
+      margin-bottom: 10px;
+      display: none; /* hidden by default */
+    }
+    /* Styling for the detail input */
+    .transactionFrequencyDetailContainer label {
+      font-weight: bold;
+    }
+    /* Styling for the justification container */
+    #justification1sContainer {
+      margin-top: 20px;
+      display: none;
+    }
+    #justification1sContainer label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+    /* Footer styling */
+    footer {
+      margin-top: 40px;
+      padding-top: 10px;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      font-size: 0.9em;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1 title="config">Tag Request Form</h1>
+  <!-- <h3><a href="https://westfraser4.sharepoint.com/teams/Tags-R-Us" target="_blank">TagsRUs SharePoint</a></h3>-->
+  <ol id="instructions">
+    <li>Ensure this form is downloaded and opened directly in browser, not a file previewer.</li>
+    <li>It is recommened to send tags in batches of at most 100 in separate emails to reduce lag.</li>
+    <li>Review the TagsRUs standard and ensure all tags are in compliance. Standards document available upon request.</li>
+    <li>Select your mill from the dropdown at the top.</li>
+    <li>Ensure you have the right columns in order with proper headers, then paste your formatted tag information from Excel into the text area or manually fill in the table.
+    <br>If you are processing a lot of tags, be sure your formatting matches the TableName through Max headers and is spelled like the available units/data types/transaction frequency dropdown options. 
+    <br>Ask for help if needed. 
+    </li>
+    <li><strong>It is STRONGLY preferred to use an IP for the PLC address to allow the ROC to quickly and accurately find the right tag.</strong></li>
+    <li>Ensure tags exist and are ready to record data so the ROC can validate functionality
+    <br>Excessive use of placeholders is discouraged
+    </li>
+    <li>Click "Process Data" to parse your table.</li>
+    <li>Review each row for accuracy, fix any validation errors.</li>
+    <li>Click "Copy Table" and then "Submit Data" when finished.</li>
+    <li>Paste your table into the email and send. </li>
+  </ol>
+  <!-- Mill Selection -->
+  <label for="millSelect">Select a mill:</label>
+  <select id="millSelect" onchange="updateUIState()">
+    <option value="">--Select a mill--</option>
+    <option value="ALD">ALD</option>
+    <option value="BEM">BEM</option>
+    <option value="BWK">BWK</option>
+    <option value="CHA">CHA</option>
+    <option value="COR">COR</option>
+    <option value="DGM">DGM</option>
+    <option value="GP">GP</option>
+    <option value="GUN">GUN</option>
+    <option value="HL">HL</option>
+    <option value="HNM">HNM</option>
+    <option value="HUG">HUG</option>
+    <option value="JEF">JEF</option>
+    <option value="JOA">JOA</option>
+    <option value="LAS">LAS</option>
+    <option value="MAP">MAP</option>
+    <option value="NAC">NAC</option>
+    <option value="NWB">NWB</option>
+    <option value="OPE">OPE</option>
+    <option value="ROC">ROC</option>
+    
+  </select>
+  <div id="millWarning">Please select a mill before proceeding.</div>
+
+  <div>
+    <h3>Paste Excel Data</h3>
+    <div class="button-group">
+      <button type="button" id="excelTemplateBtn" onclick="openExcelTemplate()">Open Excel Template</button>
+    </div>
+    <textarea id="pasteArea" placeholder="Paste your Excel data here" disabled></textarea>
+    <div class="button-group">
+      <button id="processDataBtn" onclick="processExcelData()" disabled>Process Data</button>
+      <button id="clearAllBtn" onclick="clearAllRows()" disabled>Clear All</button>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Table Name</th>
+          <th>Tag Name</th>
+          <th>PLC IP Address</th>
+          <th>PLC Path</th>
+          <th>Data Type</th>
+          <th>Units</th>
+          <th>Transaction Frequency</th>
+          <th>Tag Description</th>
+          <th>Min</th>
+          <th>Max</th>
+          <th>New Table?</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- Rows will be added here -->
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- Justification text area for 1s table -->
+  <div id="justification1sContainer">
+    <label for="justification1s">Justification for 1s table: 1s table needs additional justification due to data volume.</label>
+    <textarea id="justification1s" placeholder="Enter justification for 1s table..."></textarea>
+  </div>
+
+<div style="margin-top: 10px; margin-bottom: 10px;">
+  <label style="
+      font-weight: bold; 
+      color: red; 
+      display: inline-flex; 
+      align-items: center;
+      gap: 4px;
+  ">
+    <input type="checkbox" id="urgentFlag" style="margin: 0;">
+    🚨 Urgent Request
+  </label>
+</div>
+
+
+  <div class="button-group">
+    <button id="addRowBtn" onclick="addRow()" disabled>Add Row</button>
+    <button onclick="toggleNewTable(true)" disabled id="checkAllBtn">Check All NewTable?</button>
+    <button onclick="toggleNewTable(false)" disabled id="uncheckAllBtn">Uncheck All NewTable?</button>
+    <button id="copyButton" onclick="copyTableToClipboard()" disabled>Copy Table to Clipboard</button>
+    <button id="submitButton" onclick="validateAndSubmit()" disabled>Submit Data</button>
+  </div>
+
+  <script>
+    // DataType choices:
+    const validDataTypes = ["REAL", "FLOAT", "DINT", "SINT", "UINT", "INT", "SMALLINT", "BIGINT", "STRING", "WORD", "NVARCHAR", "DATETIME", "BOOL", "BIT", "BYTE"];
+    const plcToSQL = {float: "REAL", int: ["DINT", "SINT", "UINT"], nvarchar:["STRING", "WORD"], bit:["BOOL", "BIT"]};
+
+
+    const plcToSQLReverse = (() => {
+      const rev = new Map();
+      for (const [sqlKey, plcVals] of Object.entries(plcToSQL)) {
+        if (Array.isArray(plcVals)) {
+          plcVals.forEach(v => rev.set(String(v).toLowerCase(), sqlKey));
+        } else if (plcVals != null) {
+          rev.set(String(plcVals).toLowerCase(), sqlKey);
+        }
+      }
+      // Also map common exact SQL leafs back to their family (e.g., REAL -> float, BOOL/BIT -> bit)
+      // (This is optional but helpful if users pick a SQL-ish term directly)
+      ["real","float","double"].forEach(v => rev.set(v, "float"));
+      ["int","integer","dint","sint","uint","smallint","bigint","byte"].forEach(v => rev.set(v, "int"));
+      ["nvarchar","nvar","string","word","char","nchar","varchar"].forEach(v => rev.set(v, "nvarchar"));
+      ["bool","bit","boolean"].forEach(v => rev.set(v, "bit"));
+      return rev;
+    })();
+
+    function normalizeSQLTypeFromPLC(dt) {
+      const raw = String(dt || "").trim().toLowerCase();
+      if (!raw) return "";
+      return plcToSQLReverse.get(raw) || dt; // return family key if found; else leave as-is
+    }
+
+
+    // Units with descriptions:
+    const validUnits = [
+      {uom: "%",    description: "percent"},
+      {uom: "A",    description: "amps"},
+      {uom: "APM",    description: "arcs per minute"},
+      {uom: "Bar",    description: "Metric Unit of Pressure"},
+      {uom: "btu",  description: "British Thermal Unit"},
+      {uom: "c",    description: "cup"},
+      {uom: "ca",   description: "case"},
+      {uom: "cc", description: "cubic centimeter"},
+      {uom: "cl",   description: "centiliter"},
+      {uom: "cm",   description: "centimeter"},
+      {uom: "deg",description: "degrees"},
+      {uom: "deg C",description: "degrees celsius"},
+      {uom: "deg F",description: "degrees fahrenheit"},
+      {uom: "dl",   description: "deciliter"},
+      {uom: "dm",   description: "decimeter"},
+      {uom: "ea",   description: "each"},
+      {uom: "fl oz",description: "fluid ounce"},
+      {uom: "ft",   description: "feet"},
+      {uom: "ft/min", description: "feet per minute"},
+      {uom: "ft2",  description: "square foot"},
+      {uom: "ft3",  description: "cubic foot"},
+      {uom: "ft-lb", description: "foot-pound"},
+      {uom: "g",    description: "gram"},
+      {uom: "gal",  description: "gallon"},
+      {uom: "GPH",  description: "gallons per hour"},
+      {uom: "Hrs",    description: "hours"},
+      {uom: "Hz",description: "Hertz"},
+      {uom: "in",   description: "inch"},
+      {uom: "inWC",   description: "inch water column"},
+      {uom: "IU",   description: "International Unit"},
+      {uom: "J", description: "Joule"},
+      {uom: "kg",   description: "kilogram"},
+      {uom: "kg/hr",description: "kilogram per hour"},
+      {uom: "kg/m2",description: "kg/m2"},
+      {uom: "kg/m3",description: "kg/m3"},
+      {uom: "kips", description: "kips (kilopounds)"},
+      {uom: "kPa", description: "kilopascal"},
+      {uom: "kV",   description: "kilovolt"},
+      {uom: "km",   description: "kilometer"},
+      {uom: "kW",   description: "kilowatt"},
+      {uom: "kWh",  description: "Kilowatt Hour"},
+      {uom: "l",    description: "liter"},
+      {uom: "lb",   description: "pound"},
+      {uom: "lb/ft3",description: "pounds per cubic foot"},
+      {uom: "lbs/ft2",description: "Lbs/ft2"},
+      {uom: "lbs/hr",description: "Lb/hr"},
+      {uom: "L/min", description: "liters per minute"},
+      {uom: "m",    description: "meter"},
+      {uom: "m/sec", description: "meters per second"},
+      {uom: "inch/sec", description: "inches per second (vibration)"},
+      {uom: "mils", description: "mils (paint thickness)"},
+      {uom: "min", description: "minute"},
+      {uom: "m16",  description: "M 1/16"},
+      {uom: "m16/bndl",description: "M 1/16 per bundle"},
+      {uom: "m16/hr",description: "M 1/16 per hour"},
+      {uom: "m16/panel",description: "M 1/16 per panel"},
+      {uom: "m3",   description: "cubic meter"},
+      {uom: "mA",   description: "milliamps"},
+      {uom: "mg",   description: "milligram"},
+      {uom: "ml",   description: "milliliter"},
+      {uom: "mm",   description: "mm"},
+      {uom: "MMBTU/hr",description: "MMBTU/hr"},
+      {uom: "mV",   description: "millivolts"},
+      {uom: "on/off",   description: "on or off"},
+      {uom: "oz",   description: "ounce"},
+      {uom: "psi",  description: "pounds per square inch"},
+      {uom: "PSIG",  description: "pounds per square inch (gauge)"},
+      {uom: "pt",   description: "pint"},
+      {uom: "qt",   description: "quart"},
+      {uom: "rl",   description: "roll"},
+      {uom: "rpm",  description: "revolutions per minute"},
+      {uom: "s",  description: "seconds"},
+      {uom: "SPM",    description: "sparks per minute"},
+      {uom: "t",    description: "ton"},
+      {uom: "t/hr", description: "ton per hour"},
+      {uom: "V",    description: "volts"},
+      {uom: "yd", description: "yard"},
+      {uom: "W", description: "watt"},
+
+
+    ];
+
+    function canonicalizeHeader(h) {
+      return String(h || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+    }
+
+    const headerAliases = {
+      tableName:  ["table", "tablename", "tbl", "table_name", "tblname"],
+      tagName:    ["tag", "tagname", "name", "signal"],
+      plcPath:    ["plcpath", "plc path", "path", "plctagname", "plc tag name"],
+      plcAddress: ["plcipaddress","plc ip address",  "ip", "ipaddress", "plcip", "plc ip"],
+      dataType:   ["datatype", "data_type", "type", "plctype", "plc data type"],
+      units:      ["unit", "units", "uom", "measure", "measurement"],
+      transactionFrequency: ["transactionfrequency","transaction frequency", "frequency", "freq", "transfreq", "interval", "period", "scan rate"],
+      tagDescription: ["description", "desc", "tagdescription", "details", "note", "notes"],
+      min:        ["min", "minimum", "lower", "low", "lsl", "lowerlimit"],
+      max:        ["max", "maximum", "upper", "high", "usl", "upperlimit"],
+      newTable:   ["newtable", "new table", "newtbl", "createtable", "create table"]
+    };
+
+    // tiny Levenshtein for fuzzy fallback
+    function lev(a, b) {
+      a = canonicalizeHeader(a); b = canonicalizeHeader(b);
+      const m = a.length, n = b.length;
+      if (!m) return n; if (!n) return m;
+      const dp = Array.from({length: m+1}, (_, i) => (new Array(n+1)).fill(0));
+      for (let i=0;i<=m;i++) dp[i][0]=i;
+      for (let j=0;j<=n;j++) dp[0][j]=j;
+      for (let i=1;i<=m;i++){
+        for (let j=1;j<=n;j++){
+          const cost = a[i-1]===b[j-1]?0:1;
+          dp[i][j] = Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+        }
+      }
+      return dp[m][n];
+    }
+
+    function headerScore(cell, key) {
+      // scoring ladder: regex match >> alias exact >> alias contains >> fuzzy distance
+      const raw = String(cell||"");
+      const norm = canonicalizeHeader(raw);
+
+      // regex bonus (existing regexes)
+      if (headerRegexMap[key] && headerRegexMap[key].test(raw)) return 100;
+
+      // alias exact
+      if (headerAliases[key]?.some(a => a === norm)) return 90;
+
+      // alias contains (e.g., "plc address (main)")
+      if (headerAliases[key]?.some(a => norm.includes(a))) return 75;
+
+      // fuzzy (edit distance <= 2 is decent)
+      const bestAlias = (headerAliases[key]||[]).reduce((best, a) => {
+        const d = lev(norm, a);
+        return (d < best.d) ? {d, a} : best;
+      }, {d: Infinity, a: ""});
+      if (bestAlias.d <= 2) return 60 - bestAlias.d;  // 58..60
+
+      // weak contains of canonical key itself
+      if (norm.includes(canonicalizeHeader(key))) return 40;
+
+      return 0;
+    }
+
+    const headerRegexMap = {
+      tableName:            /table\s*name|^tablename$/i,
+      tagName:              /tag\s*name|^tagname$/i,
+      plcAddress:           /(plc.*address)|^plc&address$|address|plc\s*ip|ip\s*address|^ip$/i,
+      plcPath:              /plc\s*path|^plcpath$/i,      
+      dataType:             /data\s*type|datatype/i,
+      units:                /^(units?|uom)$/i,
+      transactionFrequency: /transaction\s*frequency|trans.*freq|^frequency$/i,
+      tagDescription:       /tag\s*description|^(description|desc)$/i,
+      min:                  /^min(imum)?$/i,
+      max:                  /^max(imum)?$/i,
+      newTable:            /new\s*table\??|^newtable\??$|create\s*table/i
+    };
+
+    const defaultColumnMap = {
+      tableName: 0, tagName: 1, plcAddress: 2, plcPath:3, dataType: 4, units: 5,
+      transactionFrequency: 6, tagDescription: 7, min: 8, max: 9, newTable: 10
+    };
+
+    // old
+    // function buildColumnMap(headerRow) {
+    //   const map = {};
+    //   headerRow.forEach((cell, idx) => {
+    //     const cellNorm = (cell || "").trim().toLowerCase();
+    //     for (const key in headerRegexMap) {
+    //       if (headerRegexMap[key].test(cellNorm)) {
+    //         map[key] = idx;
+    //         break;
+    //       }
+    //     }
+    //   });
+    //   return map;
+    // }
+
+    function buildColumnMap(headerRow) {
+      const takenIdx = new Set();
+      const map = {};
+      const keys = Object.keys(headerRegexMap); // our canonical keys
+
+      // 1) Try high-confidence regex hits first (keep your current behavior)
+      headerRow.forEach((cell, idx) => {
+        const cellNorm = (cell || "").trim().toLowerCase();
+        for (const key of keys) {
+          if (headerRegexMap[key].test(cellNorm) && !takenIdx.has(idx) && map[key] === undefined) {
+            map[key] = idx;
+            takenIdx.add(idx);
+            break;
+          }
+        }
+      });
+
+      // 2) Fill remaining with alias/contains/fuzzy scores
+      keys.forEach(key => {
+        if (map[key] !== undefined) return;
+        let best = {idx: -1, score: -1, text: ""};
+        headerRow.forEach((cell, idx) => {
+          if (takenIdx.has(idx)) return;
+          const s = headerScore(cell, key);
+          if (s > best.score) best = {idx, score: s, text: cell};
+        });
+        // threshold to avoid random bad matches
+        if (best.score >= 55) { // ~fuzzy or better
+          map[key] = best.idx;
+          takenIdx.add(best.idx);
+        }
+      });
+
+      // 3) Still missing? leave undefined and your defaultColumnMap will backfill
+      return map;
+    }
+
+    // Automatically set selects to gray if blank
+    function setSelectGrayIfBlank(select) {
+      if (!select.value && select.id != "millSelect") {
+        select.style.backgroundColor = "lightgray";
+      } else {
+        select.style.backgroundColor = "";
+      }
+    }
+
+    // Whenever a select changes, re-check background color
+    function attachSelectListener(select) {
+      setSelectGrayIfBlank(select);
+      select.addEventListener('change', function() {
+        setSelectGrayIfBlank(this);
+      });
+    }
+
+    // Normalize various forms of pasted transaction frequency input
+    function normalizeTransactionFrequencyOption(value) {
+      if (!value) return "";
+      let input = value.trim().toLowerCase();
+      let normalized = input.replace(/\s+/g, '');
+      if (/^1s$|^1sec(ond)?s?$/i.test(normalized)) return "1 s";
+      if (/^5s$|^5sec(ond)?s?$/i.test(normalized)) return "5 s";
+      if (/^10s$|^10sec(ond)?s?$/i.test(normalized)) return "10 s";
+      if (/^1min$|^1mins$|^1minute$|^1minutes$/i.test(normalized)) return "1 min";
+      if (input.indexOf("unscheduled") !== -1) return "Unscheduled Event";
+      if (input.indexOf("existing") !== -1) return "Existing";
+      return "Other";
+    }
+
+    function openExcelTemplate() {
+      window.open("https://westfraser4.sharepoint.com/:x:/t/Tags-R-Us/IQDOnbNyMEuuRI72HwV59JT8AVwZh-ZBLDXTod7NJnaUEHI?e=dI6Cdl", "_blank");
+    }
+
+    // Enables/disables UI elements based on mill selection
+    function updateUIState() {
+      const millSelect = document.getElementById('millSelect');
+      const isSelected = (millSelect.value !== "");
+      document.getElementById('millWarning').style.display = isSelected ? 'none' : 'block';
+      document.getElementById('pasteArea').disabled = !isSelected;
+      document.getElementById('processDataBtn').disabled = !isSelected;
+      document.getElementById('clearAllBtn').disabled = !isSelected;
+      document.getElementById('addRowBtn').disabled = !isSelected;
+      document.getElementById('submitButton').disabled = !isSelected;
+      document.getElementById('copyButton').disabled = !isSelected;
+      document.getElementById('checkAllBtn').disabled = !isSelected;
+      document.getElementById('uncheckAllBtn').disabled = !isSelected;
+
+      // Apply or remove gray background if the mill is unselected
+      setSelectGrayIfBlank(millSelect);
+    }
+
+    // Create a row
+    function addRow(data = {}) {
+      const tbody = document.getElementById('tableBody');
+      const row = document.createElement('tr');
+      
+      // Build DataType and Units selects
+      const dataTypeSelect = createDataTypeSelect(data.dataType || "");
+      const unitsSelect = createUnitsSelect(data.units || "");
+
+      row.innerHTML = `
+        <td><input type="text" class="tableName" value="${data.tableName || ''}" placeholder="Table Name"></td>
+        <td><input type="text" class="tagName" value="${data.tagName || ''}" placeholder="Tag Name"></td>
+        <td><input type="text" class="plcAddress" value="${data.plcAddress || ''}" placeholder="PLC IP Address"></td>
+        <td><input type="text" class="plcPath" value="${data.plcPath || ''}" placeholder="PLC Path"></td>
+        <td class="dataTypeCell"></td>
+        <td class="unitsCell"></td>
+        <td class="transactionFrequencyCell"></td>
+        <td><input type="text" class="tagDescription" value="${data.tagDescription || ''}" placeholder="Tag Description"></td>
+        <td><input type="text" class="min" value="${data.min || ''}" placeholder="Min"></td>
+        <td><input type="text" class="max" value="${data.max || ''}" placeholder="Max"></td>
+        <td><input type="checkbox" class="newTable" ${data.newTable ? 'checked' : ''}></td>
+        <td><button onclick="this.parentElement.parentElement.remove(); updateJustificationVisibility(); checkDuplicateTagNames();">Remove</button></td>
+      `;
+      
+      tbody.appendChild(row);
+
+      // Insert the dropdowns into the correct cells
+      row.querySelector('.dataTypeCell').appendChild(dataTypeSelect);
+      row.querySelector('.unitsCell').appendChild(unitsSelect);
+      row.querySelector('.transactionFrequencyCell').appendChild(createTransactionFrequencySelect(data.transactionFrequency || ''));
+
+      // Add validation listeners for text fields
+      row.querySelector('.tagName').addEventListener('blur', function() {
+        validateField(this, 'tagName');
+        checkDuplicateTagNames();
+      });
+      row.querySelector('.tagName').addEventListener('input', function() {
+        checkDuplicateTagNames();
+      });
+      row.querySelector('.tableName').addEventListener('input', function() {
+        checkDuplicateTagNames();
+      });
+      row.querySelector('.min').addEventListener('blur', function() {
+        validateField(this, 'min');
+      });
+      row.querySelector('.max').addEventListener('blur', function() {
+        validateField(this, 'max');
+      });
+      row.querySelector('.tagDescription').addEventListener('blur', function() {
+        validateField(this, 'tagDescription');
+      });
+      row.querySelector('.plcAddress').addEventListener('blur', function() {
+        validatePlcAddressField(this);
+      });
+
+
+      // Validation listeners for selects
+      dataTypeSelect.addEventListener('change', function() {
+        validateDataTypeSelect(this);
+      });
+      unitsSelect.addEventListener('change', function() {
+        validateUnitsSelect(this);
+      });
+
+      updateJustificationVisibility();
+    }
+
+    // Create the TransactionFrequency dropdown and detail field (for "Other" and "Unscheduled Event")
+    function createTransactionFrequencySelect(selectedValue) {
+      const container = document.createElement('div');
+      container.classList.add('transactionFrequencyContainer');
+
+      const select = document.createElement('select');
+      select.classList.add('transactionFrequencySelect');
+
+      const placeholderOpt = document.createElement('option');
+      placeholderOpt.value = "";
+      placeholderOpt.textContent = "--Select--";
+      select.appendChild(placeholderOpt);
+
+      const options = ["1 s", "5 s", "10 s", "1 min", "Unscheduled Event", "Existing", "Other"];
+      options.forEach(optVal => {
+        const opt = document.createElement('option');
+        opt.value = optVal;
+        opt.textContent = optVal;
+        select.appendChild(opt);
+      });
+
+      // Normalize and set the dropdown value
+      let normalized = normalizeTransactionFrequencyOption(selectedValue);
+      select.value = normalized;
+
+      // Gray background if unselected
+      attachSelectListener(select);
+
+      // Detail field container for "Other" and "Unscheduled Event"
+      const detailContainer = document.createElement('div');
+      detailContainer.style.display = "none";
+      detailContainer.classList.add('transactionFrequencyDetailContainer');
+
+      const detailLabel = document.createElement('label');
+      detailLabel.textContent = "Describe your transaction event/frequency in detail:";
+      detailLabel.style.display = "block";
+      detailLabel.style.marginTop = "5px";
+
+      const detailInput = document.createElement('input');
+      detailInput.type = "text";
+      detailInput.classList.add("transactionFrequencyDetail");
+
+      detailContainer.appendChild(detailLabel);
+      detailContainer.appendChild(detailInput);
+      container.appendChild(select);
+      container.appendChild(detailContainer);
+
+      select.addEventListener('change', function() {
+        if (["Other", "Unscheduled Event"].includes(this.value)) {
+          detailContainer.style.display = "block";
+        } else {
+          detailContainer.style.display = "none";
+          detailInput.value = "";
+        }
+        updateJustificationVisibility();
+      });
+
+      // If the selectedValue is "Other"/"Unscheduled Event", show detail
+      if (["Other", "Unscheduled Event"].includes(select.value)) {
+        detailContainer.style.display = "block";
+      }
+      return container;
+    }
+
+    // Create DataType select
+    function createDataTypeSelect(selectedValue) {
+      const select = document.createElement('select');
+      select.classList.add('dataType');
+
+      const placeholderOpt = document.createElement('option');
+      placeholderOpt.value = "";
+      placeholderOpt.textContent = "--Select--";
+      select.appendChild(placeholderOpt);
+
+      validDataTypes.forEach(dt => {
+        const opt = document.createElement('option');
+        opt.value = dt;
+        opt.textContent = dt;
+        select.appendChild(opt);
+      });
+
+      const match = validDataTypes.find(dt => dt.toLowerCase() === (selectedValue || "").toLowerCase());
+      if (match) select.value = match;
+
+      // Gray background if unselected
+      attachSelectListener(select);
+
+      return select;
+    }
+
+    // Create Units select
+    function createUnitsSelect(selectedValue) {
+      const select = document.createElement('select');
+      select.classList.add('units');
+
+      const placeholderOpt = document.createElement('option');
+      placeholderOpt.value = "";
+      placeholderOpt.textContent = "--Select--";
+      select.appendChild(placeholderOpt);
+
+      validUnits.forEach(obj => {
+        const opt = document.createElement('option');
+        opt.value = obj.uom;
+        opt.textContent = `${obj.uom} (${obj.description})`;
+        select.appendChild(opt);
+      });
+
+      // Enhanced matching logic to handle various formats from Excel
+      const normalizedInput = (selectedValue || "").trim().toLowerCase();
+      
+      // Try exact match first
+      let match = validUnits.find(u => u.uom.toLowerCase() === normalizedInput);
+      
+      // If no exact match, try matching against the full display format "% (percent)"
+      if (!match) {
+        match = validUnits.find(u => {
+          const fullFormat = `${u.uom} (${u.description})`.toLowerCase();
+          return fullFormat === normalizedInput;
+        });
+      }
+      
+      // If still no match, try extracting just the UOM part from formats like "% (Percent)"
+      if (!match) {
+        const uomMatch = normalizedInput.match(/^([^\(]+)/);
+        if (uomMatch) {
+          const extractedUom = uomMatch[1].trim();
+          match = validUnits.find(u => u.uom.toLowerCase() === extractedUom);
+        }
+      }
+      
+      // Special handling for "Bit ( ON / OFF)" -> "on/off"
+      if (!match && normalizedInput.includes('bit') && normalizedInput.includes('on')) {
+        match = validUnits.find(u => u.uom.toLowerCase() === 'on/off');
+      }
+      
+      if (match) select.value = match.uom;
+
+      // Gray background if unselected
+      attachSelectListener(select);
+
+      return select;
+    }
+
+    function clearAllRows() {
+      if (confirm('Are you sure you want to clear all rows?')) {
+        document.getElementById('tableBody').innerHTML = '';
+        document.getElementById('pasteArea').value = '';
+        updateJustificationVisibility();
+      }
+    }
+
+    // Helper function to convert Excel "Yes"/"true" values to boolean
+    function isYesOrTrue(value) {
+      if (!value) return false;
+      const normalized = String(value).trim().toLowerCase();
+      return normalized === 'yes' || normalized === 'true' || normalized === '1' || normalized === 'y';
+    }
+
+    function processExcelData() {
+  const pasteArea = document.getElementById('pasteArea');
+  const raw = pasteArea.value || "";
+
+  Papa.parse(raw, {
+    delimiter: '\t',
+    skipEmptyLines: true,
+    complete: ({ data }) => {
+      if (!data || !data.length) return;
+
+      // Detect header row & build map
+      const columnMap = buildColumnMap(data[0]);
+      const hasHeader = Object.keys(columnMap).length >= 2; // need at least a couple matches
+      const rows = hasHeader ? data.slice(1) : data;
+      const map  = hasHeader ? columnMap : defaultColumnMap;
+
+      rows.forEach(r => addRow({
+        tableName:            r[map.tableName]            || '',
+        tagName:              r[map.tagName]              || '',
+        plcAddress:           r[map.plcAddress]           || '',
+        plcPath:              r[map.plcPath]              || '',
+        dataType:             r[map.dataType]             || '',
+        units:                r[map.units]                || '',
+        transactionFrequency: r[map.transactionFrequency] || '',
+        tagDescription:       r[map.tagDescription]       || '',
+        min:                  r[map.min]                  || '',
+        max:                  r[map.max]                  || '',
+        newTable:             isYesOrTrue(r[map.newTable])
+      }));
+
+      // Clear after processing
+      pasteArea.value = '';
+
+      // Console mapping summary (debug)
+      try {
+        const summary = Object.entries(map)
+          .map(([k, i]) => `${k} ← "${(data[0][i] ?? '(unmapped)')}"`)
+          .join('\n');
+        console.info("[Header Mapping]\n" + summary);
+      } catch (e) {
+        console.warn("Header mapping debug failed:", e);
+      }
+    }
+  });
+}
+
+    // Remove header row if present
+    function removeHeaderRowIfPresent(rows) {
+      if (!rows.length) return;
+      const expectedHeaders = [
+        "tablename","tagname","plcipaddress", "plcpath","datatype","units",
+        "transactionfrequency","tagdescription","min","max"
+      ];
+      const firstRow = rows[0].map(val => val.toLowerCase().replace(/\s/g,''));
+      if (firstRow.length >= 10) {
+        let isHeaderRow = false;
+        for (let i = 0; i < 10; i++) {
+          if (firstRow[i] == expectedHeaders[i]) {
+            isHeaderRow = true;
+            break;
+          }
+        }
+        if (isHeaderRow) rows.shift();
+      }
+    }
+    // Validation rules
+    const validations = {
+      tagName: [
+      {
+      pattern: /^[A-Z][a-zA-Z0-9]*([ ][A-Z][a-zA-Z0-9]*)*$/,
+      invalidIfMatch: false,
+      message: "Tag name must be in Title Case with no underscores (e.g., 'TagNameExample' not tag_Name_example)"
+      },
+      {
+        // Matches Motor numbers *not* at the end (invalid)
+        pattern: /M\d{3,}(?=\D)/,   // look-ahead so M123 at the very end is still okay
+        invalidIfMatch: true,
+        message:
+          "Motor numbers (e.g. M123) must be at the end of the tag name (e.g. 'MotorAmpsM123')."
+      }
+      ],
+      min: [
+      {
+      pattern: /^-?\d*\.?\d*$/,
+      invalidIfMatch: false,
+      message: "Min must be a valid number"
+      }
+      ],
+      max: [
+      {
+      pattern: /^-?\d*\.?\d*$/,
+      invalidIfMatch: false,
+      message: "Max must be a valid number"
+      }
+      ],
+      transactionFrequency: [ // handled elsewhere, this is just placeholder
+      {
+      pattern: /^(?!\d+$)/, // This rule was previously 'numberOnly'
+      message: "Transaction Frequency cannot be just a number"
+      },
+      {
+      pattern: /^.{1,20}$/, // This rule was previously 'length'
+      message: "Transaction Frequency appears incorrect (length 1-20). Are you sure your columns match the inputs?" // This message was previously a 'warning'
+      }
+      ],
+      units: { // hanlded elsewhere
+      message: "Units must match one of the valid UOM entries. Otherwise, mark that you require an additional unit of measure."
+      },
+      dataType: {
+      message: "DataType must be a known type (e.g. INT, FLOAT, BOOL, etc.)"
+      },
+      tagDescription: [
+      {
+      pattern: /^(?!\d+$)/,
+      message: "Description cannot be just a number"
+      }
+      ]
+    };
+
+
+    // Validation for text fields using an array of pattern-message rules
+function validateField(element, validationType) {
+  const rules = validations[validationType];
+  if (!Array.isArray(rules) || rules.length === 0) return true;
+
+  const value = element.value.trim();
+  clearMessages(element.parentElement);
+
+  for (const rule of rules) {
+    if (!rule.pattern) continue;
+
+    const matched = rule.pattern.test(value);
+    const passed  = rule.invalidIfMatch ? !matched : matched;  // <<< ONE NEW LINE
+
+    if (!passed) {
+      if (rule.message) {
+        element.classList.add('error');
+        const div = document.createElement('div');
+        div.className = 'error-message';
+        div.textContent = rule.message;
+        element.parentElement.appendChild(div);
+      }
+      return false;        // stop on first failure
+    }
+  }
+
+  element.classList.remove('error');
+  return true;
+}
+// --- PLC&Address IP preference validation (non-blocking warning) ---
+const ipv4Regex = /^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)(?::\d{1,5})?$/;
+
+function validatePlcAddressField(element) {
+  const value = (element.value || "").trim();
+  clearMessages(element.parentElement);
+
+  // Allow blank or non-IP, but warn if not a direct IP
+  if (!value || !ipv4Regex.test(value)) {
+    const warnDiv = document.createElement('div');
+    warnDiv.className = 'warning-message';
+    warnDiv.textContent = "STRONGLY preferred to use a direct IP address.";
+    element.parentElement.appendChild(warnDiv);
+  }
+
+  return true; // don't block submission
+}
+
+
+    // Validation for DataType select
+    // old
+    // function validateDataTypeSelect(selectElem) {
+    //   clearMessages(selectElem.parentElement);
+    //   const value = selectElem.value.trim().toUpperCase();
+    //   if (value && !validDataTypes.includes(value)) {
+    //     selectElem.classList.add('error');
+    //     const errorDiv = document.createElement('div');
+    //     errorDiv.className = 'error-message';
+    //     errorDiv.textContent = validations.dataType.message;
+    //     selectElem.parentElement.appendChild(errorDiv);
+    //     return false;
+    //   } else {
+    //     selectElem.classList.remove('error');
+    //     return true;
+    //   }
+    // }
+
+    function validateDataTypeSelect(selectElem) {
+      clearMessages(selectElem.parentElement);
+      const value = (selectElem.value || "").trim();
+
+      const upper = value.toUpperCase();
+      const validNative = value && validDataTypes.includes(upper);
+
+      // NEW: accept if it maps to a SQL family via plcToSQLReverse
+      const normalized = normalizeSQLTypeFromPLC(value);
+      const acceptedViaPLC = !!normalized && normalized !== "" ;
+
+      if (!validNative && !acceptedViaPLC) {
+        selectElem.classList.add('error');
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = validations.dataType.message + " (known PLC/leaf types will be converted on copy)";
+        selectElem.parentElement.appendChild(errorDiv);
+        return false;
+      } else {
+        selectElem.classList.remove('error');
+
+        // Optional: show non-blocking warning if conversion will happen
+        if (!validNative && acceptedViaPLC && normalized !== value) {
+          const warn = document.createElement('div');
+          warn.className = 'warning-message';
+          warn.textContent = `Will convert "${value}" → "${normalized}" on copy.`;
+          selectElem.parentElement.appendChild(warn);
+        }
+        return true;
+      }
+    }
+
+    // Validation for Units select
+    function validateUnitsSelect(selectElem) {
+      clearMessages(selectElem.parentElement);
+      const rawValue = selectElem.value;
+      if (!rawValue) {
+        selectElem.classList.remove('error');
+        return true;
+      }
+      const found = validUnits.find(u => u.uom === rawValue);
+      if (!found) {
+        selectElem.classList.add('error');
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = validations.units.message;
+        selectElem.parentElement.appendChild(errorDiv);
+        return false;
+      }
+      selectElem.classList.remove('error');
+      return true;
+    }
+
+    // Helper: remove error/warning messages
+    function clearMessages(parentEl) {
+      const existingError = parentEl.querySelector('.error-message');
+      const existingWarning = parentEl.querySelector('.warning-message');
+      if (existingError) existingError.remove();
+      if (existingWarning) existingWarning.remove();
+    }
+
+    // Update visibility of the justification container based on rows with "1 s"
+    function updateJustificationVisibility() {
+      let show = false;
+      document.querySelectorAll('.transactionFrequencySelect').forEach(select => {
+        if (select.value === "1 s") {
+          show = true;
+        }
+      });
+      const justificationContainer = document.getElementById('justification1sContainer');
+      if (justificationContainer) {
+        justificationContainer.style.display = show ? "block" : "none";
+      }
+    }
+
+    // Helper to get TransactionFrequency value from a row
+    function getTransactionFrequencyValue(row) {
+      const container = row.querySelector('.transactionFrequencyContainer');
+      if (!container) return "";
+      const selectElem = container.querySelector('.transactionFrequencySelect');
+      let value = selectElem ? selectElem.value : "";
+      if (["Other", "Unscheduled Event"].includes(value)) {
+        const detailInput = container.querySelector('.transactionFrequencyDetail');
+        if (detailInput && detailInput.value.trim() !== "") {
+          value += " (" + detailInput.value.trim() + ")";
+        }
+      }
+      return value;
+    }
+
+    // Check for duplicate Tag Names within the same table and highlight duplicates
+    function checkDuplicateTagNames() {
+      const rows = document.querySelectorAll('#tableBody tr');
+      // Build a count map keyed by "tableName|tagName"
+      const nameCount = {};
+      rows.forEach(row => {
+        const tableVal = (row.querySelector('.tableName')?.value || '').trim().toLowerCase();
+        const tagVal   = (row.querySelector('.tagName')?.value   || '').trim().toLowerCase();
+        if (tagVal) {
+          const key = tableVal + '|' + tagVal;
+          nameCount[key] = (nameCount[key] || 0) + 1;
+        }
+      });
+      // Highlight duplicates only when they share the same table name
+      rows.forEach(row => {
+        const tagInput  = row.querySelector('.tagName');
+        const tableVal  = (row.querySelector('.tableName')?.value || '').trim().toLowerCase();
+        const tagVal    = (tagInput?.value || '').trim().toLowerCase();
+        if (tagVal && nameCount[tableVal + '|' + tagVal] > 1) {
+          tagInput.classList.add('duplicate-tag');
+        } else {
+          tagInput?.classList.remove('duplicate-tag');
+        }
+      });
+      return Object.values(nameCount).every(count => count <= 1);
+    }
+
+    // Validate all rows
+    function validateAllRows() {
+      let isValid = true;
+      const rows = document.querySelectorAll('#tableBody tr');
+      rows.forEach(row => {
+        const tagNameEl   = row.querySelector('.tagName');
+        const minEl       = row.querySelector('.min');
+        const maxEl       = row.querySelector('.max');
+        const descEl      = row.querySelector('.tagDescription');
+        const plcAddrEl   = row.querySelector('.plcAddress');
+        const dataTypeSel = row.querySelector('.dataType');
+        const unitsSel    = row.querySelector('.units');
+        isValid = validateField(tagNameEl, 'tagName') && isValid;
+        isValid = validateField(minEl, 'min') && isValid;
+        isValid = validateField(maxEl, 'max') && isValid;
+        isValid = validateField(descEl, 'tagDescription') && isValid;
+
+        validatePlcAddressField(plcAddrEl);
+
+        isValid = validateDataTypeSelect(dataTypeSel) && isValid;
+        isValid = validateUnitsSelect(unitsSel) && isValid;
+      });
+      return isValid;
+    }
+
+    // Toggle all newTable checkboxes
+    function toggleNewTable(shouldCheck) {
+      document.querySelectorAll('.newTable').forEach(cb => {
+        cb.checked = shouldCheck;
+      });
+    }
+
+    function getMailSubject() {
+      const millSelect = document.getElementById('millSelect').value;
+      const rowCount = document.querySelectorAll('#tableBody tr').length;
+      const today = new Date().toLocaleDateString();
+      const urgent = document.getElementById('urgentFlag')?.checked;
+      return `${millSelect} Tag Request: ${rowCount} tags on ${today}${urgent ? " [URGENT]" : ""}`;
+    }
+
+    // Validate and then submit data
+    function validateAndSubmit() {
+      if (!validateAllRows()) {
+        alert('Please correct the errors before submitting.');
+        return;
+      }
+      if (!checkDuplicateTagNames()) {
+        alert('Duplicate Tag Names detected (highlighted in red). Please ensure all Tag Names are unique before submitting.');
+        return;
+      }
+      if (!confirm("Have you ensured your tags are in compliance with the TagsRUs standard? Click OK to confirm.")) {
+        return;
+      }
+      let rowsData = [];
+      document.querySelectorAll('#tableBody tr').forEach(row => {
+        rowsData.push({
+          tableName: row.querySelector('.tableName').value,
+          tagName: row.querySelector('.tagName').value,
+          plcAddress: row.querySelector('.plcAddress').value,
+          plcPath: row.querySelector('.plcPath')?.value || '',
+          dataType: row.querySelector('.dataType').value,
+          units: row.querySelector('.units').value,
+          transactionFrequency: getTransactionFrequencyValue(row),
+          tagDescription: row.querySelector('.tagDescription').value,
+          min: row.querySelector('.min').value,
+          max: row.querySelector('.max').value,
+          newTable: row.querySelector('.newTable').checked
+        });
+      });
+      // Build final data object including justification if any row has "1 s"
+      let finalData = { rows: rowsData };
+      if (rowsData.some(row => row.transactionFrequency.indexOf("1 s") === 0)) {
+        finalData.justificationFor1sTable = document.getElementById("justification1s").value;
+      }
+      const subject = getMailSubject();
+      const body = 'Please paste your table into the body of this email.';
+      const mailtoLink = `mailto:wfm-tagsrus@westfraser.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = mailtoLink;
+    }
+
+    // Copy table as HTML to clipboard
+    function copyTableToClipboard() {
+      if (!validateAllRows()) {
+        alert('Please correct any errors before copying the table.');
+        return;
+      }
+      if (!checkDuplicateTagNames()) {
+        alert('Duplicate Tag Names detected (highlighted in red). Please ensure all Tag Names are unique before copying.');
+        return;
+      }
+      const rows = document.querySelectorAll('#tableBody tr');
+      let html = `
+        <table border="1" style="border-collapse: collapse;">
+          <thead>
+            <tr>
+              <th>TableName</th>
+              <th>TagName</th>
+              <th>PLCIPAddress</th>
+              <th>PLCPath</th>
+              <th>DataType</th>
+              <th>Units</th>
+              <th>TransactionFrequency</th>
+              <th>TagDescription</th>
+              <th>Min</th>
+              <th>Max</th>
+              <th>NewTable?</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      rows.forEach(row => {
+        const tableName = escapeHTML(row.querySelector('.tableName')?.value || '');
+        const tagName   = escapeHTML(row.querySelector('.tagName')?.value || '');
+        const plcAddr   = escapeHTML(row.querySelector('.plcAddress')?.value || '');
+        const plcPath   = escapeHTML(row.querySelector('.plcPath')?.value || '');
+        const dtRaw     = row.querySelector('.dataType')?.value || '';
+        const dt        = escapeHTML(normalizeSQLTypeFromPLC(dtRaw));
+        const units     = escapeHTML(row.querySelector('.units')?.value || '');
+        const freq      = escapeHTML(getTransactionFrequencyValue(row));
+        const desc      = escapeHTML(row.querySelector('.tagDescription')?.value || '');
+        const minVal    = escapeHTML(row.querySelector('.min')?.value || '');
+        const maxVal    = escapeHTML(row.querySelector('.max')?.value || '');
+        const exists    = row.querySelector('.newTable')?.checked ? 'Yes' : 'No';
+        html += `
+          <tr>
+            <td>${tableName}</td>
+            <td>${tagName}</td>
+            <td>${plcAddr}</td>
+            <td>${plcPath}</td>
+            <td>${dt}</td>
+            <td>${units}</td>
+            <td>${freq}</td>
+            <td>${desc}</td>
+            <td>${minVal}</td>
+            <td>${maxVal}</td>
+            <td>${exists}</td>
+          </tr>
+        `;
+      });
+      html += `</tbody></table>`;
+
+      // If there's at least one "1 s", include the justification text below
+      const any1s = Array.from(document.querySelectorAll('.transactionFrequencySelect'))
+                         .some(s => s.value === '1 s');
+      if (any1s) {
+        const justificationText = document.getElementById('justification1s').value || '';
+        html += `<br><div><strong>Justification for 1 s:</strong><br>${escapeHTML(justificationText)}</div>`;
+      }
+
+      if (navigator.clipboard && navigator.clipboard.write) {
+        const blobInput = new Blob([html], { type: 'text/html' });
+        const data = [new ClipboardItem({ 'text/html': blobInput })];
+        navigator.clipboard.write(data)
+          .then(() => {
+            alert('Table copied to clipboard! Paste into your email.');
+          })
+          .catch(() => fallbackCopyHTML(html));
+      } else {
+        fallbackCopyHTML(html);
+      }
+    }
+
+    function fallbackCopyHTML(html) {
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'fixed';
+      tempDiv.style.left = '-9999px';
+      tempDiv.contentEditable = 'true';
+      tempDiv.innerHTML = html;
+      document.body.appendChild(tempDiv);
+      const range = document.createRange();
+      range.selectNodeContents(tempDiv);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      try {
+        document.execCommand('copy');
+        alert('Table copied to clipboard! Paste into your email.');
+      } catch (err) {
+        alert('Failed to copy.');
+      }
+      document.body.removeChild(tempDiv);
+    }
+
+    function escapeHTML(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // Make sure millSelect background is set on load
+    window.addEventListener('DOMContentLoaded', () => {
+      const millSelect = document.getElementById('millSelect');
+      attachSelectListener(millSelect);
+      updateUIState();
+    });
+  </script>
+  <footer>
+    <p>Ver 1.5.4 | 04/20/2026</p>
+  </footer>
+</body>
+</html>

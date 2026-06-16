@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Tag Request Form — West Fraser</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --wf: #017e3a;
+      --wf-dark: #015f2b;
+      --wf-light: #e6f4ec;
+      --g50: #f8fafc;
+      --g100: #f1f5f9;
+      --g200: #e2e8f0;
+      --g300: #cbd5e1;
+      --g400: #94a3b8;
+      --g500: #64748b;
+      --g700: #334155;
+      --g900: #0f172a;
+      --err: #dc2626;
+      --err-bg: #fef2f2;
+      --warn: #d97706;
+      --warn-bg: #fffbeb;
+      --ok: #016a30;
+      --r: 8px;
+      --rl: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "DM Sans", sans-serif; background: var(--g50); color: var(--g900); }
+
+    .header { background: white; border-bottom: 3px solid var(--wf); }
+    .header-inner { max-width: 1300px; margin: 0 auto; padding: 12px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .hlogo { display: flex; align-items: center; gap: 16px; }
+    .hlogo img { height: 48px; width: auto; }
+    .htitle h1 { font-size: 17px; font-weight: 600; color: var(--g900); }
+    .htitle p { font-size: 12px; color: var(--g500); margin-top: 2px; }
+    .hver { font-size: 11px; color: var(--g400); font-family: "DM Mono", monospace; }
+
+    .main { max-width: 1300px; margin: 0 auto; padding: 24px 32px 320px; }
+    .card { background: white; border: 1px solid var(--g200); border-radius: var(--rl); margin-bottom: 20px; }
+    .card-clip { overflow: hidden; }
+    .card-pad { padding: 20px 24px; }
+    .section-label { font-size: 11px; font-weight: 600; color: var(--g500); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+
+    .steps-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 16px 12px; background: var(--g50); border-radius: var(--r); border: 1px solid var(--g200); }
+    .snum { width: 28px; height: 28px; border-radius: 50%; background: var(--wf); color: white; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .step p { font-size: 12px; color: var(--g700); line-height: 1.5; }
+    .step strong { color: var(--g900); font-weight: 500; }
+
+    .mill-row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 11px; font-weight: 600; color: var(--g500); text-transform: uppercase; letter-spacing: 0.4px; }
+    .field select { padding: 8px 11px; border: 1.5px solid var(--g300); border-radius: var(--r); font-family: "DM Sans", sans-serif; font-size: 13px; color: var(--g900); background: white; transition: border-color 0.15s; }
+    .field select:focus { outline: none; border-color: var(--wf); box-shadow: 0 0 0 3px rgba(1,126,58,0.1); }
+    .urgent-toggle { display: flex; align-items: center; gap: 7px; padding: 8px 13px; border: 1.5px solid var(--g300); border-radius: var(--r); cursor: pointer; transition: all 0.15s; user-select: none; }
+    .urgent-toggle:hover { border-color: var(--err); background: var(--err-bg); }
+    .urgent-toggle.on { border-color: var(--err); background: var(--err-bg); }
+    .urgent-toggle input { display: none; }
+    .urgent-toggle span { font-size: 13px; font-weight: 500; color: var(--err); }
+
+    /* Entry mode tabs */
+    .entry-tabs { display: flex; gap: 0; margin-bottom: 20px; border-radius: var(--rl); overflow: hidden; border: 1px solid var(--g200); background: white; }
+    .etab { flex: 1; padding: 13px 18px; font-family: "DM Sans", sans-serif; font-size: 13px; font-weight: 500; color: var(--g500); background: white; border: none; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.15s; text-align: left; display: flex; flex-direction: column; gap: 3px; }
+    .etab:first-child { border-right: 1px solid var(--g200); }
+    .etab .etab-title { font-size: 13px; font-weight: 600; color: var(--g700); }
+    .etab .etab-sub { font-size: 11px; color: var(--g400); }
+    .etab.active { border-bottom-color: var(--wf); background: var(--wf-light); }
+    .etab.active .etab-title { color: var(--wf-dark); }
+    .etab:disabled { opacity: 0.4; cursor: not-allowed; }
+    /* Paste panel */
+    .paste-panel { background: white; border: 1px solid var(--g200); border-radius: var(--rl); margin-bottom: 20px; padding: 20px 24px; display: none; }
+    .paste-panel.visible { display: block; }
+    .paste-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+    #pasteArea { width: 100%; min-height: 80px; padding: 10px 12px; border: 1.5px solid var(--g200); border-radius: var(--r); font-family: "DM Sans", sans-serif; font-size: 12px; color: var(--g900); resize: vertical; transition: border-color 0.15s; }
+    #pasteArea:focus { outline: none; border-color: var(--wf); box-shadow: 0 0 0 2px rgba(1,126,58,0.08); }
+    #pasteArea:disabled { background: var(--g100); color: var(--g400); cursor: not-allowed; }
+    .paste-hint { font-size: 11px; color: var(--g400); margin-top: 6px; }
+
+    .entry-header { padding: 14px 22px; border-bottom: 1px solid var(--g200); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .entry-header h2 { font-size: 14px; font-weight: 600; }
+
+    .tbl-wrap { overflow-x: visible; border-radius: 0 0 var(--rl) var(--rl); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    thead th { background: var(--g50); padding: 11px 6px; font-size: 11px; font-weight: 600; color: var(--g500); text-transform: uppercase; letter-spacing: 0.3px; text-align: left; border-bottom: 1px solid var(--g200); white-space: nowrap; }
+    thead th.req::after { content: " *"; color: var(--err); }
+    tbody tr { border-bottom: 1px solid var(--g100); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--g50); }
+    tbody td { padding: 12px 6px; vertical-align: middle; }
+
+    .ci { width: 100%; padding: 7px 7px; border: 1.5px solid var(--g200); border-radius: 6px; font-family: "DM Sans", sans-serif; font-size: 13px; color: var(--g900); background: white; transition: border-color 0.15s; }
+    .ci:focus { outline: none; border-color: var(--wf); box-shadow: 0 0 0 2px rgba(1,126,58,0.08); }
+    .ci.err { border-color: var(--err); background: var(--err-bg); }
+    .ci.warn { border-color: var(--warn); background: var(--warn-bg); }
+    .cs { width: 100%; padding: 7px 5px; border: 1.5px solid var(--g200); border-radius: 6px; font-family: "DM Sans", sans-serif; font-size: 13px; color: var(--g900); background: white; cursor: pointer; }
+    .cs:focus { outline: none; border-color: var(--wf); }
+    .cs.unset { color: var(--g400); }
+
+    .msg { font-size: 10px; margin-top: 2px; }
+    .msg.err { color: var(--err); }
+    .msg.warn { color: var(--warn); }
+    .dup { background: #fffbeb !important; border-color: var(--warn) !important; }
+
+    .cbtd { text-align: center; padding-top: 8px !important; }
+    .cbtd input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--wf); }
+    .rmbtn { padding: 2px 5px; border: 1px solid var(--g200); background: white; color: var(--g400); border-radius: 5px; cursor: pointer; font-size: 11px; transition: all 0.15s; white-space: nowrap; }
+    .rmbtn:hover { background: var(--err-bg); border-color: var(--err); color: var(--err); }
+
+    .empty-state { padding: 40px 22px; text-align: center; color: var(--g400); font-size: 13px; }
+
+    .just-box { background: var(--warn-bg); border: 1px solid #fcd34d; border-radius: var(--r); padding: 13px 17px; margin-bottom: 18px; display: none; }
+    .just-box label { font-size: 12px; font-weight: 600; color: var(--warn); display: block; margin-bottom: 7px; }
+    .just-box textarea { width: 100%; padding: 7px 10px; border: 1px solid #fcd34d; border-radius: 6px; font-family: "DM Sans", sans-serif; font-size: 12px; min-height: 55px; resize: vertical; }
+
+    .actions { background: white; border: 1px solid var(--g200); border-radius: var(--rl); padding: 14px 22px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .al, .ar { display: flex; gap: 7px; flex-wrap: wrap; }
+    .btn { padding: 7px 14px; border-radius: var(--r); font-family: "DM Sans", sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; border: 1.5px solid transparent; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-g { background: white; border-color: var(--g300); color: var(--g700); }
+    .btn-g:hover:not(:disabled) { background: var(--g50); border-color: var(--g400); }
+    .btn-p { background: var(--wf); color: white; border-color: var(--wf); }
+    .btn-p:hover:not(:disabled) { background: var(--wf-dark); }
+    .btn-s { background: var(--ok); color: white; border-color: var(--ok); }
+    .btn-s:hover:not(:disabled) { background: #015228; }
+
+    .tbl-warn { font-size: 10px; margin-top: 2px; color: var(--warn); }
+    .tbl-ok { font-size: 10px; margin-top: 2px; color: var(--wf); }
+    .col-rm { width: 24px; padding: 0 2px !important; } .col-tbl { width: 12%; } .col-tag { width: 11%; } .col-ip { width: 9%; }
+    .col-path { width: 10%; } .col-dt { width: 7%; } .col-u { width: 7%; }
+    .col-fr { width: 8%; } .col-desc { width: 12%; } .col-mn { width: 5%; }
+    .col-mx { width: 5%; } .col-nt { width: 6%; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="hlogo">
+      <img src="data:image/png;base64,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" alt="West Fraser" />
+      <div class="htitle">
+        <h1>Tag Request Form</h1>
+        <p>ROC — OSB &amp; Sawmill Form</p>
+      </div>
+    </div>
+    <div class="hver">v1.9</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="card card-clip card-pad">
+    <div class="section-label">How to submit a tag request</div>
+    <div class="steps-grid">
+      <div class="step"><div class="snum">1</div><p><strong>Select your mill</strong> from the dropdown below.</p></div>
+      <div class="step"><div class="snum">2</div><p><strong>Add rows</strong> manually or <strong>paste from Excel</strong> using the template.</p></div>
+      <div class="step"><div class="snum">3</div><p><strong>Use a PLC IP address</strong> so the ROC can locate your tag quickly.</p></div>
+      <div class="step"><div class="snum">4</div><p><strong>Fix any warnings</strong> highlighted in orange before submitting.</p></div>
+      <div class="step"><div class="snum">5</div><p><strong>Copy table</strong>, click <strong>Submit</strong>, then paste into the email that opens.</p></div>
+    </div>
+  </div>
+
+  <div class="card card-clip card-pad">
+    <div class="section-label">Naming &amp; data type rules</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:var(--g700);line-height:1.6;">
+      <div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--r);padding:14px 16px;">
+        <div style="font-weight:600;color:var(--g900);margin-bottom:8px;">Tag name conventions</div>
+        <ul style="padding-left:16px;display:flex;flex-direction:column;gap:4px;">
+          <li>TitleCase with no spaces, underscores, or special characters</li>
+          <li>Use <strong>Left</strong> and <strong>Right</strong> instead of East, West, North, or South</li>
+          <li>Put the delineation at the end: <code style="background:var(--wf-light);padding:1px 4px;border-radius:3px;">FormerHeight1</code> not <code style="background:#fee2e2;padding:1px 4px;border-radius:3px;">Former1Height</code></li>
+          <li>Be descriptive but succinct: <code style="background:var(--wf-light);padding:1px 4px;border-radius:3px;">BlenderSpeedHzCL2</code> not <code style="background:#fee2e2;padding:1px 4px;border-radius:3px;">CL2BlenderSpeed</code></li>
+        </ul>
+      </div>
+      <div style="background:var(--warn-bg);border:1px solid #fcd34d;border-radius:var(--r);padding:14px 16px;">
+        <div style="font-weight:600;color:var(--warn);margin-bottom:8px;">BIT data type is not permitted</div>
+        <p>BITs cause conflicting display patterns in downstream applications. Use <strong>INT</strong> instead — it stores and displays the same on/off information.</p>
+      </div>
+    </div>
+     <p style="font-size:12px;color:var(--g700);margin-top:14px;">
+      <strong style="color:var(--warn);">Note:</strong> Orange warnings help the ROC team complete your request faster but are not required to fix before submitting.
+    </p>
+  </div>
+
+  <div class="card card-clip card-pad">
+    <div class="mill-row">
+      <div class="field">
+        <label for="millSelect">Mill</label>
+        <select id="millSelect" onchange="updateUI()">
+          <option value="">— Select a mill —</option>
+          <optgroup label="OSB Mills">
+            <option value="ALD">ALD</option>
+            <option value="BEM">BEM</option>
+            <option value="BWK">BWK</option>
+            <option value="CHA">CHA</option>
+            <option value="COR">COR</option>
+            <option value="GP">GP</option>
+            <option value="GUN">GUN</option>
+            <option value="HL">HL</option>
+            <option value="HUG">HUG</option>
+            <option value="JEF">JEF</option>
+            <option value="JOA">JOA</option>
+            <option value="LAS">LAS</option>
+            <option value="NAC">NAC</option>
+          </optgroup>
+          <optgroup label="Sawmills">
+            <option value="NWB">NWB</option>
+            <option value="DGM">DGM</option>
+            <option value="MAP">MAP</option>
+            <option value="OPE">OPE</option>
+            <option value="HNM">HNM</option>
+            <option value="LEO">LEO</option>
+            <option value="ARM">ARM</option>
+            <option value="NEW">NEW</option>
+            <option value="JOY">JOY</option>
+            <option value="ANG">ANG</option>
+            <option value="RUS">RUS</option>
+            <option value="MAN">MAN</option>
+            <option value="FIT">FIT</option>
+          </optgroup>
+        </select>
+      </div>
+      <label class="urgent-toggle" id="urgLbl">
+        <input type="checkbox" id="urgFlag" onchange="this.closest('.urgent-toggle').classList.toggle('on',this.checked)">
+        <span>Mark as urgent</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Entry mode tabs -->
+  <div class="entry-tabs">
+    <button class="etab active" id="tabManual" onclick="switchTab('manual')" disabled>
+      <span class="etab-title">Manual entry</span>
+      <span class="etab-sub">Add rows one at a time using the table below</span>
+    </button>
+    <button class="etab" id="tabPaste" onclick="switchTab('paste')" disabled>
+      <span class="etab-title">Paste from Excel</span>
+      <span class="etab-sub">Copy from the Excel template and import all at once</span>
+    </button>
+  </div>
+
+  <!-- Paste panel (hidden by default) -->
+  <div class="paste-panel" id="pastePanel">
+    <div class="paste-top">
+      <div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:3px">Paste from Excel</div>
+        <div style="font-size:12px;color:var(--g500)">Copy rows from the template (including the header) and paste below</div>
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn btn-g" onclick="openExcelTemplate()">Open Excel template</button>
+        <button class="btn btn-p" id="processBtn" onclick="processExcelData()" disabled>Import rows</button>
+      </div>
+    </div>
+    <textarea id="pasteArea" placeholder="Select your mill first, then paste your Excel data here." disabled></textarea>
+    <div class="paste-hint">Tip: include the header row when copying — the importer will detect column order automatically.</div>
+  </div>
+
+  <div class="card">
+    <div class="entry-header">
+      <h2>Tag data</h2>
+      <span id="rowCounter" style="font-size:12px;color:var(--g500);">0 rows</span>
+    </div>
+    <div class="tbl-wrap">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th class="col-tbl req">Table name</th>
+            <th class="col-tag req">Tag name</th>
+            <th class="col-ip">PLC IP address</th>
+            <th class="col-path">PLC path</th>
+            <th class="col-dt req">Data type</th>
+            <th class="col-u">Units</th>
+            <th class="col-fr">Frequency</th>
+            <th class="col-desc">Description</th>
+            <th class="col-mn">Min</th>
+            <th class="col-mx">Max</th>
+            <th class="col-nt">New table?</th>
+            <th class="col-rm"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="emptyState" class="empty-state">No tags yet. Click <strong>Add row</strong> or paste from Excel above.</div>
+    </div>
+  </div>
+
+  <div class="just-box" id="justBox">
+    <label>Justification required for 1-second polling</label>
+    <textarea id="just1s" placeholder="Explain why 1-second polling is needed for these tags..."></textarea>
+  </div>
+
+  <div class="actions">
+    <div class="al">
+      <button class="btn btn-g" id="addBtn" onclick="addRow()" disabled>+ Add row</button>
+      <button class="btn btn-g" id="clrBtn" onclick="clearAll()" disabled>Clear all</button>
+      <button class="btn btn-g" id="chkAllBtn" onclick="toggleNT(true)" disabled>Check all new table</button>
+      <button class="btn btn-g" id="unchkBtn" onclick="toggleNT(false)" disabled>Uncheck all new table</button>
+    </div>
+    <div class="ar">
+      <button class="btn btn-g" id="copyBtn" onclick="copyTable()" disabled>Copy table</button>
+      <button class="btn btn-s" id="subBtn" onclick="doSubmit()" disabled>Submit request</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const DT = ["Real","Float","Dint","Sint","Uint","Int","Smallint","Bigint","String","Word","Nvarchar","Datetime","Bool","Bit","Byte"];
+  const plcMap = (()=>{const m=new Map();["real","float","double"].forEach(v=>m.set(v,"float"));["int","integer","dint","sint","uint","smallint","bigint","byte"].forEach(v=>m.set(v,"int"));["nvarchar","nvar","string","word","char","nchar","varchar"].forEach(v=>m.set(v,"nvarchar"));["bool","bit","boolean"].forEach(v=>m.set(v,"bit"));return m;})();
+  function normDT(dt){const r=String(dt||"").trim().toLowerCase();return plcMap.get(r)||dt;}
+  const UOM=[
+    {u:"%",d:"percent"},{u:"A",d:"amps"},{u:"APM",d:"arcs per minute"},{u:"Bar",d:"metric pressure"},
+    {u:"btu",d:"British Thermal Unit"},{u:"deg",d:"degrees"},{u:"deg C",d:"degrees Celsius"},
+    {u:"deg F",d:"degrees Fahrenheit"},{u:"ft",d:"feet"},{u:"ft/min",d:"feet per minute"},
+    {u:"ft2",d:"square feet"},{u:"ft3",d:"cubic feet"},{u:"ft-lb",d:"foot-pound"},
+    {u:"g",d:"gram"},{u:"gal",d:"gallon"},{u:"GPH",d:"gallons per hour"},{u:"Hrs",d:"hours"},
+    {u:"Hz",d:"Hertz"},{u:"in",d:"inch"},{u:"inWC",d:"inch water column"},
+    {u:"inch/sec",d:"inches per second"},{u:"kg",d:"kilogram"},{u:"kg/hr",d:"kg per hour"},
+    {u:"kg/m3",d:"kg per cubic meter"},{u:"kPa",d:"kilopascal"},{u:"kW",d:"kilowatt"},
+    {u:"kWh",d:"kilowatt hour"},{u:"l",d:"liter"},{u:"lb",d:"pound"},
+    {u:"lb/ft3",d:"pounds per cubic foot"},{u:"lbs/hr",d:"pounds per hour"},
+    {u:"L/min",d:"liters per minute"},{u:"m",d:"meter"},{u:"m/sec",d:"meters per second"},
+    {u:"m16",d:"M 1/16"},{u:"m16/hr",d:"M 1/16 per hour"},{u:"m3",d:"cubic meter"},
+    {u:"mA",d:"milliamps"},{u:"mg",d:"milligram"},{u:"mils",d:"mils paint thickness"},
+    {u:"min",d:"minute"},{u:"ml",d:"milliliter"},{u:"mm",d:"millimeter"},
+    {u:"mV",d:"millivolts"},{u:"on/off",d:"on or off"},{u:"oz",d:"ounce"},
+    {u:"psi",d:"pounds per square inch"},{u:"PSIG",d:"PSI gauge"},
+    {u:"rpm",d:"revolutions per minute"},{u:"s",d:"seconds"},{u:"SPM",d:"sparks per minute"},
+    {u:"t",d:"ton"},{u:"t/hr",d:"ton per hour"},{u:"V",d:"volts"},{u:"W",d:"watt"},
+  ];
+  // ── Header mapping for Excel paste ──────────────────────────────────────────
+  function canonicalizeHeader(h){return String(h||"").toLowerCase().replace(/[^a-z0-9]+/g,"");}
+  const headerAliases={
+    tableName:["table","tablename","tbl","table_name","tblname"],
+    tagName:["tag","tagname","name","signal"],
+    plcPath:["plcpath","plc path","path","plctagname","plc tag name"],
+    plcAddress:["plcipaddress","plc ip address","ip","ipaddress","plcip","plc ip"],
+    dataType:["datatype","data_type","type","plctype","plc data type"],
+    units:["unit","units","uom","measure","measurement"],
+    transactionFrequency:["transactionfrequency","transaction frequency","frequency","freq","transfreq","interval","period","scan rate"],
+    tagDescription:["description","desc","tagdescription","details","note","notes"],
+    min:["min","minimum","lower","low","lsl","lowerlimit"],
+    max:["max","maximum","upper","high","usl","upperlimit"],
+    newTable:["newtable","new table","newtbl","createtable","create table"]
+  };
+  const headerRegexMap={
+    tableName:/table\s*name|^tablename$/i,
+    tagName:/tag\s*name|^tagname$/i,
+    plcAddress:/(plc.*address)|^plc&address$|address|plc\s*ip|ip\s*address|^ip$/i,
+    plcPath:/plc\s*path|^plcpath$/i,
+    dataType:/data\s*type|datatype/i,
+    units:/^(units?|uom)$/i,
+    transactionFrequency:/transaction\s*frequency|trans.*freq|^frequency$/i,
+    tagDescription:/tag\s*description|^(description|desc)$/i,
+    min:/^min(imum)?$/i,
+    max:/^max(imum)?$/i,
+    newTable:/new\s*table\??|^newtable\??$|create\s*table/i
+  };
+  const defaultColumnMap={tableName:0,tagName:1,plcAddress:2,plcPath:3,dataType:4,units:5,transactionFrequency:6,tagDescription:7,min:8,max:9,newTable:10};
+
+  function headerScore(cell,key){
+    const raw=String(cell||"");const norm=canonicalizeHeader(raw);
+    if(headerRegexMap[key]&&headerRegexMap[key].test(raw))return 100;
+    if(headerAliases[key]?.some(a=>a===norm))return 90;
+    if(headerAliases[key]?.some(a=>norm.includes(a)))return 75;
+    const bestAlias=(headerAliases[key]||[]).reduce((best,a)=>{const d=lev(norm,a);return(d<best.d)?{d,a}:best;},{d:Infinity,a:""});
+    if(bestAlias.d<=2)return 60-bestAlias.d;
+    if(norm.includes(canonicalizeHeader(key)))return 40;
+    return 0;
+  }
+  function buildColumnMap(headerRow){
+    const takenIdx=new Set();const map={};const keys=Object.keys(headerRegexMap);
+    headerRow.forEach((cell,idx)=>{const cellNorm=(cell||"").trim().toLowerCase();for(const key of keys){if(headerRegexMap[key].test(cellNorm)&&!takenIdx.has(idx)&&map[key]===undefined){map[key]=idx;takenIdx.add(idx);break;}}});
+    keys.forEach(key=>{if(map[key]!==undefined)return;let best={idx:-1,score:-1,text:""};headerRow.forEach((cell,idx)=>{if(takenIdx.has(idx))return;const s=headerScore(cell,key);if(s>best.score)best={idx,score:s,text:cell};});if(best.score>=55){map[key]=best.idx;takenIdx.add(best.idx);}});
+    return map;
+  }
+  function isYesOrTrue(v){if(!v)return false;const n=String(v).trim().toLowerCase();return n==="yes"||n==="true"||n==="1"||n==="y";}
+
+function openExcelTemplate(){
+  const a=document.createElement("a");
+  a.href="TagRequestTemplate.xlsx";
+  a.download="TagRequestTemplate.xlsx";
+  a.click();
+}
+
+  // Fuzzy match pasted data to known DT and Units options
+  function fuzzyMatchDT(val){
+    if(!val)return val;
+    const v=val.trim().toLowerCase();
+    // Exact match first
+    const exact=DT.find(d=>d.toLowerCase()===v);
+    if(exact)return exact.toUpperCase();
+    // Partial match
+    const partial=DT.find(d=>d.toLowerCase().includes(v)||v.includes(d.toLowerCase()));
+    if(partial)return partial.toUpperCase();
+    return val; // keep original if no match
+  }
+  function fuzzyMatchUnit(val){
+    if(!val)return val;
+    const v=val.trim().toLowerCase();
+    // Exact unit match
+    const exactU=UOM.find(u=>u.u.toLowerCase()===v);
+    if(exactU)return exactU.u+" ("+exactU.d+")";
+    // Exact description match
+    const exactD=UOM.find(u=>u.d.toLowerCase()===v);
+    if(exactD)return exactD.u+" ("+exactD.d+")";
+    // Partial match on unit code
+    const partialU=UOM.find(u=>u.u.toLowerCase().includes(v)||v.includes(u.u.toLowerCase()));
+    if(partialU)return partialU.u+" ("+partialU.d+")";
+    // Partial match on description
+    const partialD=UOM.find(u=>u.d.toLowerCase().includes(v)||v.includes(u.d.toLowerCase()));
+    if(partialD)return partialD.u+" ("+partialD.d+")";
+    return val; // keep original if no match
+  }
+
+  // Vertical format headers (in order)
+  const VERTICAL_HEADERS = [
+    "tablename","tagname","plcipaddress","plcpath","datatype",
+    "units","transactionfrequency","tagdescription","min","max"
+  ];
+
+  function isVerticalFormat(raw) {
+    const lines = raw.trim().split(/\r?\n/).filter(l => l.trim() !== "");
+    if (lines.length < 2) return false;
+    // If any line contains a tab, it's Excel/TSV format — not vertical
+    if (lines.some(l => l.includes("\t"))) return false;
+    // Vertical format: first line matches a known header exactly
+    const first = lines[0].trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (VERTICAL_HEADERS.some(h => h === first)) return true;
+    // Headerless vertical: single column, count is a multiple of the field count
+    // (one complete row = 10 fields). Require at least one full row.
+    if (lines.length >= VERTICAL_HEADERS.length && lines.length % VERTICAL_HEADERS.length === 0) return true;
+    return false;
+  }
+
+  function parseVerticalFormat(raw) {
+    const lines = raw.trim().split(/\r?\n/).map(l => l.trim()).filter(l => l !== "");
+    const numFields = VERTICAL_HEADERS.length;
+    // Detect header block: check if first numFields lines all look like headers
+    // by checking each normalized line starts with or contains a known header keyword
+    const headerKeywords = ["table","tag","plc","data","unit","freq","desc","min","max","desired","transaction","address","path","type","value"];
+    let headerCount = 0;
+    for (let i = 0; i < lines.length && i < numFields; i++) {
+      const norm = lines[i].toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (headerKeywords.some(k => norm.includes(k))) {
+        headerCount++;
+      } else break;
+    }
+    // Skip header block if all numFields lines matched
+    const dataLines = headerCount >= numFields ? lines.slice(numFields) : lines;
+    const rows = [];
+    for (let i = 0; i + numFields <= dataLines.length; i += numFields) {
+      const chunk = dataLines.slice(i, i + numFields);
+      rows.push({
+        tableName:            chunk[0] || "",
+        tagName:              chunk[1] || "",
+        plcAddress:           chunk[2] || "",
+        plcPath:              chunk[3] || "",
+        dataType:             chunk[4] || "",
+        units:                chunk[5] || "",
+        transactionFrequency: chunk[6] || "",
+        tagDescription:       chunk[7] || "",
+        min:                  chunk[8] || "",
+        max:                  chunk[9] || "",
+        newTable:             false
+      });
+    }
+    return rows;
+  }
+
+  function processExcelData(){
+    const pasteArea=document.getElementById("pasteArea");
+    const raw=pasteArea.value||"";
+    if(!raw.trim()){alert("Paste some data first.");return;}
+    if(isVerticalFormat(raw)){
+      const rows=parseVerticalFormat(raw);
+      let added=0;
+      rows.forEach(r=>{
+        if(!r.tableName&&!r.tagName&&!r.plcAddress&&!r.tagDescription)return;
+        addRow({...r, dataType:fuzzyMatchDT(r.dataType), units:fuzzyMatchUnit(r.units)});added++;
+      });
+      pasteArea.value="";
+      chkDups();
+      alert(added+" row"+(added===1?"":"s")+" imported.");
+    } else {
+      Papa.parse(raw,{delimiter:"\t",skipEmptyLines:true,complete:({data})=>{
+        if(!data||!data.length)return;
+        const columnMap=buildColumnMap(data[0]);
+        // Determine if first row is a header or data
+        // A header row has recognizable column name keywords
+        // A data row typically has an IP address, numeric values, or known data types in expected positions
+        const firstRow=data[0]||[];
+        const firstRowNorm=firstRow.map(c=>String(c||"").trim().toLowerCase().replace(/[^a-z0-9]/g,""));
+        const headerKeywords=["table","tag","plc","data","unit","freq","desc","min","max","type","address","path","name","signal","measure"];
+        const headerMatches=firstRowNorm.filter(c=>c.length>1&&headerKeywords.some(k=>c.includes(k))).length;
+        // Also check if first row looks like data: IP pattern, known DT value, or numeric min/max
+        const ipPattern=/^\d{1,3}\.\d{1,3}/;
+        const hasIPInRow=firstRow.some(c=>ipPattern.test(String(c||"").trim()));
+        const knownDTs=["real","float","dint","sint","uint","int","bool","bit","string","nvarchar","datetime","word","byte","smallint","bigint"];
+        const hasDTInRow=firstRow.some(c=>knownDTs.includes(String(c||"").trim().toLowerCase()));
+        const hasHeader=(headerMatches>=2)&&!hasIPInRow&&!hasDTInRow;
+        const rows=hasHeader?data.slice(1):data;
+        const map=hasHeader?columnMap:defaultColumnMap;
+        let added=0;
+        rows.forEach(r=>{
+          const meaningful=[map.tableName,map.tagName,map.plcAddress,map.plcPath,map.dataType,map.units,map.transactionFrequency,map.tagDescription];
+          if(meaningful.every(idx=>idx===undefined||!r[idx]||String(r[idx]).trim()===""))return;
+          addRow({
+            tableName:r[map.tableName]||"",tagName:r[map.tagName]||"",
+            plcAddress:r[map.plcAddress]||"",plcPath:r[map.plcPath]||"",
+            dataType:fuzzyMatchDT(r[map.dataType]||""),units:fuzzyMatchUnit(r[map.units]||""),
+            transactionFrequency:r[map.transactionFrequency]||"",
+            tagDescription:r[map.tagDescription]||"",
+            min:r[map.min]||"",max:r[map.max]||"",
+            newTable:isYesOrTrue(r[map.newTable])
+          });added++;
+        });
+        pasteArea.value="";
+        chkDups();
+        alert(added+" row"+(added===1?"":"s")+" imported.");
+      }});
+    }
+  }
+  // ── End Excel paste ──────────────────────────────────────────────────────────
+
+  function can(h){return String(h||"").toLowerCase().replace(/[^a-z0-9]+/g,"");}
+  function lev(a,b){a=can(a);b=can(b);const m=a.length,n=b.length;if(!m)return n;if(!n)return m;const dp=Array.from({length:m+1},(_,i)=>new Array(n+1).fill(0));for(let i=0;i<=m;i++)dp[i][0]=i;for(let j=0;j<=n;j++)dp[0][j]=j;for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)dp[i][j]=Math.min(dp[i-1][j]+1,dp[i][j-1]+1,dp[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return dp[m][n];}
+
+  function mkUnitsSearch(selectedVal){
+    const items=UOM.map(u=>u.u+" ("+u.d+")");
+    // Try to find display value for selected
+    let displayVal="";
+    if(selectedVal){
+      const norm=selectedVal.trim().toLowerCase();
+      const m=UOM.find(u=>u.u.toLowerCase()===norm)||UOM.find(u=>{const part=norm.match(/^([^(]+)/);return part&&u.u.toLowerCase()===part[1].trim();});
+      if(m)displayVal=m.u+" ("+m.d+")";
+      else displayVal=selectedVal;
+    }
+    const wrap=mkSearchDrop(items, displayVal, "— units —", function(inp, val, w){
+      upJust();chkDups();
+    });
+    wrap._input.className="ci units-value";
+    return wrap;
+  }
+
+  function mkSearchDrop(items, selectedVal, placeholder, onSelect, extraCheck){
+    const wrap=document.createElement("div");wrap.style.position="relative";
+    const inp=document.createElement("input");
+    inp.type="text";inp.className="ci";
+    inp.value=selectedVal||"";inp.placeholder=placeholder;
+    inp.setAttribute("autocomplete","off");
+    const drop=document.createElement("div");
+    drop.style.cssText="position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--wf);border-radius:6px;z-index:9999;max-height:180px;overflow-y:auto;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.15);margin-top:2px;";
+    function renderDrop(filter){
+      drop.innerHTML="";
+      const f=(filter||"").toLowerCase();
+      const matches=items.filter(i=>i.toLowerCase().includes(f));
+      if(!matches.length){drop.style.display="none";return;}
+      matches.forEach(t=>{
+        const item=document.createElement("div");
+        item.textContent=t;
+        item.style.cssText="padding:7px 10px;font-size:12px;cursor:pointer;color:var(--g900);border-bottom:1px solid var(--g100);";
+        item.addEventListener("mousedown",function(e){
+          e.preventDefault();inp.value=t;drop.style.display="none";
+          if(onSelect)onSelect(inp,t,wrap);
+        });
+        item.addEventListener("mouseenter",function(){this.style.background="var(--wf-light)";});
+        item.addEventListener("mouseleave",function(){this.style.background="";});
+        drop.appendChild(item);
+      });
+      drop.style.display="block";
+      const rect=inp.getBoundingClientRect();
+      const spaceBelow=window.innerHeight-rect.bottom;
+      const spaceAbove=rect.top;
+      const dropH=Math.min(drop.scrollHeight,180);
+      if(spaceBelow<dropH&&spaceAbove>spaceBelow){
+        drop.style.top="auto";drop.style.bottom="100%";
+        drop.style.marginTop="0";drop.style.marginBottom="2px";
+        drop.style.boxShadow="0 -4px 12px rgba(0,0,0,0.15)";
+      } else {
+        drop.style.top="100%";drop.style.bottom="auto";
+        drop.style.marginTop="2px";drop.style.marginBottom="0";
+        drop.style.boxShadow="0 4px 12px rgba(0,0,0,0.15)";
+      }
+    }
+    inp.addEventListener("focus",function(){renderDrop(this.value);});
+    inp.addEventListener("input",function(){renderDrop(this.value);if(onSelect)onSelect(inp,this.value,wrap);});
+    inp.addEventListener("blur",function(){setTimeout(()=>{drop.style.display="none";},200);});
+    inp.addEventListener("keydown",function(e){
+      const its=[...drop.querySelectorAll("div")];
+      const ai=its.findIndex(i=>i.classList.contains("sd-active"));
+      if(e.key==="ArrowDown"){e.preventDefault();if(ai>=0)its[ai].classList.remove("sd-active");const nx=its[ai+1]||its[0];if(nx){nx.classList.add("sd-active");nx.style.background="var(--wf-light)";}}
+      else if(e.key==="ArrowUp"){e.preventDefault();if(ai>=0)its[ai].classList.remove("sd-active");const pv=its[ai-1]||its[its.length-1];if(pv){pv.classList.add("sd-active");pv.style.background="var(--wf-light)";}}
+      else if(e.key==="Enter"){const ac=drop.querySelector(".sd-active");if(ac){e.preventDefault();inp.value=ac.textContent;drop.style.display="none";if(onSelect)onSelect(inp,ac.textContent,wrap);}}
+      else if(e.key==="Escape"){drop.style.display="none";}
+    });
+    wrap.appendChild(inp);wrap.appendChild(drop);
+    wrap._input=inp;
+    return wrap;
+  }
+
+  function mkDTSelect(sel){
+    const items=DT.map(d=>d);
+    const wrap=mkSearchDrop(items, sel||"", "— type —", function(inp, val, w){
+      // BIT warning
+      w.querySelectorAll(".bit-warn").forEach(m=>m.remove());
+      if(val.toUpperCase()==="BIT"){
+        const wn=document.createElement("div");wn.className="msg warn bit-warn";
+        wn.textContent="BIT not permitted — use INT instead";w.appendChild(wn);
+      }
+      chkDups();
+    });
+    wrap._input.className="ci dataType-input";
+    return wrap;
+  }
+
+  function upEmpty(){const n=document.querySelectorAll("#tbody tr").length;document.getElementById("emptyState").style.display=n===0?"block":"none";document.getElementById("rowCounter").textContent=n+" row"+(n===1?"":"s");}
+  function updateUI(){
+    const ok=document.getElementById("millSelect").value!=="";
+    ["addBtn","clrBtn","chkAllBtn","unchkBtn","copyBtn","subBtn"].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=!ok;});
+    document.getElementById("tabManual").disabled=!ok;
+    document.getElementById("tabPaste").disabled=!ok;
+    document.getElementById("pasteArea").disabled=!ok;
+    document.getElementById("processBtn").disabled=!ok;
+    // Refresh table name fields in existing rows when mill changes
+    document.querySelectorAll("#tbody tr").forEach(row=>{
+      const tdCell=row.querySelector("td.col-tbl");
+      if(!tdCell)return;
+      const currentVal=getTableName(row);
+      // Replace the cell content with a fresh field
+      tdCell.innerHTML="";
+      const newField=mkTableNameField(currentVal);
+      tdCell.appendChild(newField);
+    });
+  }
+  function switchTab(mode){
+    const isManual=mode==="manual";
+    document.getElementById("tabManual").classList.toggle("active",isManual);
+    document.getElementById("tabPaste").classList.toggle("active",!isManual);
+    document.getElementById("pastePanel").classList.toggle("visible",!isManual);
+    // Show/hide Add row button based on mode
+    document.getElementById("addBtn").style.display=isManual?"":"none";
+  }
+
+  // Table data injected by updateTables.js — do not edit this line manually
+  let MILL_TABLES = {"ALD":["_RecipeUploadTest","_TagManager_Test_Audit","_tblLog","_to_delete_OpacityCalibrationTable_Temporary_Troubleshoot","BaghouseDataTable","Barcode_Error_Log","Barcode_NBInOutEntry_Insert_Audit","BlendingTable","BlendingTotalizerContinuousTable","BlendingTotalizerTable","BookSaw_CycleTime","CrossCutDataTable","CurrentProductTable","CycleTime_MS1","CycleTime_MS2","DashboardTable","DowntimeMachineIdTable","DowntimeMachineTable","Dryer1DataTable","Dryer2DataTable","EndOfShift","Energy1DataTable","Energy2DataTable","EnergyDataTable","EnvironmentalCalibTable","EnvironmentalTable","FinishingDataTable","FormingDataTable","FormingParametersTable","FormScanTable","Furnace1GrateCam","Furnace2GrateCam","GradeStampTable","MasterStackerDataTable","MasterWeightTable","OpacityCalibrationTable","OpacityCalibrationTable_20240718","OpacityCalibrationTypeTable","OpacityMeter","PanelPointThicknessTable","PanelThicknessTable","PressEfficiencyTable","PressLoadTable","PressParametersCyclicTable","PressParametersTable","PressScanTable","PressTestDataTable","RipCutDataTable","RMW_M16","RMW_TankAndMeterReading","RMW_TankLevel","RMW_TotalizedMeterReading","RobotCyclicDataTable","RobotDataTable","RoutingDataTable","SK_Trend","SSMAbortTable","Strander1DataByEvent","Strander1KnifeChangeTable","Strander2DataByEvent","Strander2KnifeChangeTable","TestTable","WoodRoomDataTable"],"BEM":["AlertTriggerTable","Barcode_Error_Log","Barcode_PLCWeights_Insert_Audit","Blender_Data_Table","BlenderDowntimeTable","BlenderID","BlendingDataTable","BlendingTotalizerTable","Burner_Data_Table","CaulScreenTable","CoreDryerDowntimeTable","CoreDryerEfficiencyTable","CoreFaceAlarms_TO_DELETE","CoreLambTable","CoreRotaryDryer","Crew Table","CurrentProductTable","CycleTimeLoaderArm","CycleTimeLoaderArmLookup","CycleTimeLoaderCage","CycleTimeLoaderCageLookup","CycleTimeUnloaderCage","CycleTimeUnloaderCageLookup","DebarkerEfficiencyTable","DebarkerEfficiencyTable_20220315","DebarkerTable","DowntimeTable","Dryer3DowntimeTable","Dryer3EfficiencyTable","Dryer3Table","DryStorageTable","dtproperties","Efficiency","EnvironmentalTable","EnvironmentalTable_20230411","EnvironmentalTable_Config","Equipment","ERS_EnvironmentalScheduledEventsTable","ESPField1DownTimeTable","ESPField2DownTimeTable","Face_Lamb_Table","FaceDryerDowntimeTable","FaceDryerEfficiencyTable","FaceRotaryDryer","FinishingDataTable","FinishingDownGradeTable","FinishingDownTimeTable","FinishingTable","FlatLineDryerTable","FormingDataTable","FormingDataTableNew","FormingLineTable","FormingParametersTable","Konus1Table","Konus2Table","LogPondTable","MasterWtTable","MatHeightTCLTable","MatHeightTSLTable","PowderResinTable","Press Downtime Codes Table","PressAlarms_TO_BE_DELETED","PressDataTable","PressManTable","PressScanTable","PressTemperature","ProductTable","ProductTargetTable","RMW_M16","RMW_TankAndMeterReading","RMW_TankLevel","RMW_TotalizedMeterReading","RTO15MinAverage","Rto1DownTimeTable","RTO1Table","Rto2DownTimeTable","RTO2Table","Rto3DowntimeTable","RTO3HrAverage","RTO3Table","Sander1SecondTable","Scott_Trend","ScreenCycleTable","ShiftEndTable","SideLiftDowntimeTable","StranderDowntimeTable","tblChartProperties_TO_DELETE","tblFormingLineMCRange_TO_DELETE","tblProcessVariableLimits_TO_DELETE","Trigger_Temp","UnitTable","Waferizer1Table","Waferizer2Table","Waferizer3Table","WellonsTable","WoodRoom","WoodRoom1Second"],"BWK":["_FinishParametersSP_Audit","AllEvent","Barcode_Error_Log","Barcode_NBInOutEntry_Insert_Audit","Barcode_PLCWIPMasterPanel_Insert_Audit","BarcodeTable","BlenderDowntimeTable","BlenderIDTable","BlenderTotalizerTable","BlendingDataTable","BlendingTotal","BlendingTotalCont","CurrentProductTable","Diagnostic","DowntimeTable","DryerTable","EFBTable","EnergyTable","EnvironmentTable","FinesTable","FinishingDowntime","FinishingTable","FlakerDowntime","FormingDataTable","FormingScanTable","FTAEInstance","HeatEnergyDataTable","LineStopTrapsTable","MasterWtTable","Messages","PressClosingDataTable","PressEfficiencyTable","PressLoadTable","PressProgramTable","PressScanTable","ReportCardTable","RMW_M16","RMW_TankAndMeterReading","RMW_TankAndMeterReading_20250227","RMW_TankLevel","RMW_TotalizedMeterReading","RobotCyclic","RobotDataTable","SmartsheetRobotRowID","SSMAbortStack","SSMAbortTable","SteamRoomTable","Strander1Table","Strander2Table","Strander3Table","StranderDowntimeTable","StranderTable","SummingScale","sysdiagrams","VibSensorDataTable","WaxApplication","WaxStorageTable","WoodRoomTable"],"CHA":["_TagManager_Test_Audit","_TroubleShootTable","Barcode_Error_Log","Barcode_PLCWeights_Insert_Audit","BlenderTotalizerContinuousTable","BlenderTotalizerTable","BlendingDataTable","BlendingTable","BundleWeightDataTable","CurrentProductTable","DowntimeMachineIdTable","DowntimeMachineTable","Dryer1Table","DryerDataTable","EnergyDataTableF3","EnergyDataTableF4","Environnement","EnviroShiftEndTable","F1_LastBatchTable","F2_LastBatchTable","F3_LastBatchTable","FinishingCyclicTable","FlakingTable","FormingDataTable","Furnace3GrateCam","Furnace4GrateCam","GreenEndTable","Imal_RejectListTable","Imal_RejectTable","LoaderCageEventTable","MasterPanelWeightTable","MESShiftEndTable","MpcDataTable","MVMotorAmpsTempTable","PanelPointThicknessTable","PanelThicknessTable","PressEfficiencyTable","PressLoadTable","PressScanTable","ProductMapping","RMW_M16","RMW_TankAndMeterReading","RMW_TankLevel","RMW_TotalizedMeterReading","RobotCyclicDataTable","RobotDataTable","RSSQLTriggersTable","ScreeningDataTable","ShiftEndDataTable","Strander1ByEvent","Strander2ByEvent","Strander3ByEvent","Strander3DataByEvent","Strander3KnifeChangeTable","Strander4DataByEvent","Strander4KnifeChangeTable","TankDesc","TankFarmLevels","WESPTable","Woodroom"],"COR":["_TagManager_Test_Audit","AirCompressorManagement","Barcode_Error_Log","Barcode_InsertUnit_Audit_____TO DELETE","Barcode_NBInOutEntry_Insert_Audit","Barcode_PLCWeights_Insert_Audit","Barcode_PLCWIPMasterPanel_Insert_Audit","BarCodeProductsTable","Blender2SnapShotTable","BlenderDowntimeTable","BlenderID","BlenderSnapShotTable","BlenderTotalsTable1","BlenderTotalsTable1Cont","CrossCarriageTimers","CurrentProductTable","CurrentYearTable","DieffensorDataTable","DowntimeCodesTable","DowntimeTable","Dryer1SnapShotTable","Dryer2SnapShotTable","DryerAreaTable","DryerDowntimeCodesTable","DryerDowntimeTable","DryerIdTable","DryerOutletAirlocksDataTable","DryerSnapShotTable","DryersSparkDetectTable","DryersSparkRateCounterTable","dtproperties","DustCollSnapShotTable","EndOfShift","EnergySystem1Status","EnergySystem2Status","EnviroDataTable","EnvironmentalLogTable","EnvironmentYearlyTable","EWSTable","FinesCameraTable","FinishingDowntimeCodesTable","FinishingDowntimeTable","FinishingSawSpeedsTable","FinishingSnapShotTable","Flaker_1_Gate","Flaker_2_Gate","Flaker1Status","Flaker2Status","FlakerCameraHandshakeTable","FlakerDowntimeTable","FlakerDowTimeCodesTable","FlakerSnapShotTable","FlakerSnapShotTableNew","FlakesFinesTable","FlameXMiniFogTable","FLineSnapShot2Table","FlineSnapShotTable","FormatorDataTable","FormatorDefenserTable","FuelSystemsTable","GradingBlister","GradingScale","GradingThickness","GreenBinPickerRollCurrentTable","HeatEnergySnapShotTable","LabSampleTable","Line2PressData2Table","Line2PressDataTable","Line2PressManTable","LoaderBeltTorqueTable","LoaderPositioningTable","MasterWtTable","MatingChainMatPosTable","MillDowntimeTable","MTR_Preloader1Upper","MTR_Preloader2Lower","MTR_TransferBelt1","MTR_Transferbelt2","NotNearProductChangeTable","OpacityCalibrationTable","OpacityTable","PaintInventoryTable","PaintUsageTable","PikaDataTable","PLCForceTable","PLCWeights_Insert_Audit","PressChainPositioningTimes","PressChainTempTable","PressEfficeincyCodesTable","PressEfficiencyTable","PressHeatingTable","PressHydTable","PressLoadTable","PressParametersTable","PressProgramTable","PressScanTable","PressSnapShotTable","PressSnapShotTempTable","ProductTargetTable","RBSDowntimeTable","RBSSnapshotTable","RBSTotalUnitsTable","RcoTable","RMW_M16","RMW_TankAndMeterReading","RobotDataTable","RTO1DowntimeLogTable","RTO2DowntimeLogTable","RtoChamberTempTable","RTOFanVibrationTable","RtoTable","SawAmpsFirstPassTable","Scott_Dint","ScottDint_1_Table","ScottDint_2_Table","ShiftEnd_Stencil1Data","ShiftEndDataTable","ShiftTotalsTable","SSMAbortTable","Table42","TankLevelReadingShiftChange","tblChartProperties","tblFormingLineMCRange","tblProcessVariableLimits","TCODowntimeLogTable","TeafordSystem1StatusTable","TeafordSystem2StatusTable","ThermalOilStatus","TitleVTable","TnGDowntimeCodeTable","TnGDowntimeTable","TnGDustFanVibrationTable","TNGShiftProductChangeTable","UnitTable","UnloaderArmTempTable","UnloaderCyclesTable","UnloaderPositioningTable","VariabilityBlenderStop","VariabilityBoardWeight","VariabilityCrossWeight","VariabilityLineSpeed","VariabilityMoistureContent","VariabilityPMDITemp","VariabilityPressTemp","VariabilitySparkEvent","WeightControlTable","WespCausticSystem","WoodyardSnapShotTable"],"GP":["BlenderDowntimeTable","BlenderIDTable","BlenderTable","BlenderTotals","BlenderTotalsCont","CurrentProductTable","DB1Log_DataTable","DB2ILog_DataTable","DelugeValves","DownTime_Area_IDs","DownTime_Area_tbl","DowntimeTable","Dryer","DryerB","Energy","EnergyB","EnergyManagementRuntimeTable","EnviromentReportingTable","F1LogPush_DataTable","F2LogPush_DataTable","FinesManagement","FinishingDataTable","FinishingDataTable1hr","FormingDataTable","Furnace3GrateCam","Furnace4GrateCam","FurnaceCycleTimesTable","HMIAlarmAreaTable","HMIAlarmTable","MasterWtTable","MPCDryer3Table","MPCDryer4Table","NASmartGearboxDataTable","PikaWaxTable","PLC01","PressEfficiencyTable","PressLoadTable","PressTable","RimboardDataTable","RMW_M16","RMW_TankAndMeterReading","RMW_TankAndMeterReading_20250227","RMW_TankAndMeterReading_20250327","RMW_TankLevel","RMW_TankLevel_20250227","RMW_TankLevel_20250327","RMW_TotalizedMeterReading","RMW_TotalizedMeterReading_20250227","RMW_TotalizedMeterReading_20250327","RSSQLTriggers","ShiftEndTable","SparkDetectTable","Strander1DataByEvent","Strander2DataByEvent","TanksTable","ThomasTable","VariabilityTable","VSDataTable","WoodroomDataTable"],"GUN":["_TagManager_Test_Audit","AirCompressors","Barcode_Error_Log","Barcode_NBInOutEntry_Insert_Audit","BlenderDowntimeTable","BlenderID","BlenderLiquidResinTable","BlenderModeTable","BlenderSnapShotTable","BlenderTotalizerTable","CraneTable","CrewTable","CurrentProductTable","DistributionConveyor1Table","DistributionConveyor2Table","DistributionConveyor3Table","DowntimeTable","Dryer1RTOTable","Dryer1Table","Dryer2RTOTable","Dryer2Table","Dryer3RTOTable","Dryer3Table","DryerDowntimeTable","DryerEfficiencyTable","DryFlakeReclaim","dtproperties","DustSystemPluggedTable","DustSystemStateTable","EnvironmentalLogTable","EnvironmentalTable","ESPTable","EWSDataTable","EWSProductTable","EWSProductTableAudit","EWSSummaryTable","ExhaustFanTable","FBeltRegPos","FinishingDownTimeTable","FinishingTable","FinishingUnitTable","FlakerEfficiencyTable","FlakerKnifechangeTable","FlameXTable","FLineSnapShotTable","FLineToScreenRetModeTable","FormerModeTable","FormingLineScanTable","GantryTable","GreenBinRackbackTable","GreenBins","GreenEndEfficiencyTable","Heater1Table","Heater2Table","Heater3Table","HeaterCommonTable","HMIAlarmsDryer","HMIAlarmsPress","LineSpeedTable","MasterPanelWeightTable","MasterWtTable","MatFormationKPI","MillEnergyUsageTable","MPCDryer1Table","MPCDryer2Table","MPCDryer3Table","OpacityMinuteGroupTable","PaintTankInventory","PanelDataTable","PanelPointThicknessTable","PanelThicknessTable","PreDryer2Table","PreDryer3Table","PressChains","PressEfficiency","PressHeatTable","PressLoadingCycle","PressloadTable","PressLoopTempEventTable","PressManTable","PressParametersTable","PressProductTable","PressProgramTable","PressScanTable","ProccessChangeLog","RMW_M16","RMW_TankAndMeterReading","RMW_TankLevel","RMW_TotalizedMeterReading","RobotDataTable","RobotDataTable1","RobotDataTable2","ShiftEndTable","ShortBoardAtTransferTable","ShortMat_LOG","SmartsheetRowID","SSMBioFilterBypass","SSMDryerAbortsAllTable","SSMDryerAbortTable","SSMDryerShutdownTable","SSMDryerStartUpTable","SSMOpacityHighTable","SSMPPressShutDownTable","SSMPressStartUPTable","StandardPressloadTable","SuperScreenTable","sysdiagrams","TankFarmTable","tblChartProperties","tblCyclesPerHourTarget","tblDryerName","tblFieldDesc","tblFormingLineMCRange","tblLogPerHourTarget","tblProcessVariableLimits","tblTableDesc","TNGRejectRecordTable","TNGThicknessReadings","TrolleyTable","UnitTable","VibrationTable","Waferizer1MotorStartLogTable","Waferizer1Table","Waferizer2MotorStartLogTable","Waferizer2Table","Waferizer3MotorStartLogTable","Waferizer3Table","WaferizerDownTimeTable","WoodYardTable"],"HL":["Baghouse","BlenderDowntimeTable","BlenderIDTable","BlenderTotalizerContTable","BlenderTotalizerTable","BlendingDataTable","Boards","BookSaw","CurrentProductTable","CycleTimeLine1","Debarker1","Debarker2","DiagonalSaws","DiagSawsTable","DowntimeTable","DPCTestTable","Dryer1","Dryer2","Dryer3","DryerAbortTable","DryerDowntimeTable","DryerIDTable","EndOfShift","Energy","EnvironmentalDailySummaryTable","EnvironmentalDataTable","Finishing","FinishingDownTimeTable","FinishingRefeed700Conv","FormingDataTable","FTAEInstance","FuelSystemTable","Furnace1DataTable","Furnace2DataTable","Furnace3DataTable","Giben","GibenSawEfficiencyTable","LabCutTable","M16TotalsHistoryTESTZW","MachineCenterTable","MasterWtTable","Packaging","PaintBoothL1","PanelPointThicknessTable","PanelThicknessTable","Ponds","Preheating","PressBeltAndChains","PressBeltLubrication","PressEfficiencyTable","PressHeatTable","PressMPDataTable","PressScanTable","Product","QualityTable","RailcarBoilerTable","ReverseOsmosis1","ReverseOsmosis2","RMW_M16","RMW_TankAndMeterReading","RMW_TankLevel","RMW_TotalizedMeterReading","RobotDataTable","Steam","Strander1","Strander1DataByEvent","Strander1KnifeChangeTable","Strander2","Strander2DataByEvent","Strander2KnifeChangeTable","Strander3","Strander3DataByEvent","Strander3KnifeChangeTable","StranderDowntimeTable","StranderEndOfShift","ThermalOilSystemDataTable","TriggerTable","UnitsMadeTable","VisionSmartDataTable","VPKPI","WasteManagement","WESP","WME_Testing","WoodRoomDataTable"],"HUG":["_TagManager_Test_Audit","_TO_DELETE_Barcode_InsertUnit_Audit","_to_delete_Barcode233InsertUnitAudit","_TO_DELETE_FormingDataTable","ATrainDataTable","Barcode_Error_Log","Barcode_NBInOutEntry_Insert_Audit","BiofilterDataTable","BlenderDetailDataTable","BlenderDowntimeTable","BlenderTotalizerTable","BlenderTotalizerTableCont","BlendingAtomizerTable","BlendingData10MinuteTable","BlendingDataTable","BlisterDataTable","BTrainDataTable","ConstraintsTableMPC","CraneGPS","CTrainDataTable","CurrentProductTable","dataviewDemo_StrandersData","DeltaV613DataTable","DownTimeEventsStop","DowntimeTable","Dryer","Dryer1DataByMinuteTable","Dryer1DataTable","Dryer1EfficiencyDataTable","Dryer2DataByMinuteTable","Dryer2DataTable","Dryer2EfficiencyDataTable","Dryer3DataByMinuteTable","Dryer3DataTable","Dryer3EfficiencyDataTable","DryerDowntime","DryerDowntimeTable","DryerEfficiencyTable","DryerRoutingDataTable","DustDataTable","EcoScanDataTable","EnviroShiftEndTable","EnviroTable","EpochNarrowTable","EpochTable","EWS_Area_Weight","EWSTrackStatusTable","FinishingDataTable","FinishingDownTimeTable","FinishingDowntimeTbl","FlakerKnifeChange","FlakerTransTable","FormingLine_Metric","FormingLineData10MinuteTable","FormingLineDataTable","FormingRecipeTable","FormingWigWagDataTable","FourFtUnitWeightDataTable","HeatEnergyATrainMPCDataTable","HeatEnergyBTrainMPCDataTable","HeatEnergyCTrainMPCDataTable","HeatEnergyDataTable","HeatEnergyEfficiency","HeatEnergyTableMPC","helper_MesMillVertical","JagEventID","JagEventTable","LiftStationDataTable","LogDataTable","LogLengthDataTable","LogLine1DataTable","LogLine2DataTable","MachineDowntimeTable","MachineIdTable","MatRejectTable","MatRejectTableII","MES_Mill_ProductsChanges","MES_Mill_ProductsChanges_TEST","MillStatusDataTable","MillUpdateHourly","MoistureCalibrationDataTable","Norbord40DataTable","OpacityCalibrationTable","OpacityCalibrationTypeTable","PackageBoilerTable","PanelScaleData10MinuteTable","PanelScaleDataTable","PanelThicknessTable","Parameters","PLCDataTable","Point6TGTable","PreHeaterByMinutesDataTable","PreHeaterDataTable","PreHeaterTableByMinute","PressChainLubeDataTable","PressEfficiencyTable","PressHeatDataTrans","PressInfeedDistancePressureDataTable","PressMotorsDataTable","PressOffsetsDataTable","PressOutfeedDistancePressureDataTable","PressOutfeedSawDataTable","PressRecipeTable","PressSpecificPressuresDataTable","ProcessDataTable","QualityMachineUtilizationDataTable","RCODataTable","RecipeDownLoadTime","ReleaseAgentDataTable","RMW_M16","RMW_TankAndMeterReading","RMW_TankLevel","RMW_TotalizedMeterReading","RSSQLTriggerTable","RTOTableDryer1","RTOTableDryer2","RTOTableDryer3","SanderTG","SanderThicknessTable","SanderUnitTable","ShiftEndTable","SPCDistanceTable","SPCPressInfeedDistancePressureDataTable","SPCPressInfeedtest","SPCPressOutfeedDistancePressureDataTable","SPCPressureTable","SPCValveControlTable","SSMAbortStacks","SSMAbortTable","SSMBioFilterBypass","SSMDryerShutdownTable","SSMDryerStartUpTable","SSMOpacityHighTable","SSMPressShutdownTable","SSMPressStartUpTable","StackBinCountTable","StackBinsDataTable","Strander1DataByEvent","Strander1KnifeChangeTable","Strander2DataByEvent","Strander2KnifeChangeTable","StranderAreaTable","StranderDowntime","StranderDowntimeTable","StranderKnifeChangeTable","SuperSaw1DataTable","SuperSaw2DataTable","sysdiagrams","tblOpacityCalibrationType","TCOModeTypeTable","TempTable","Test","ThicknessBlisterTable","ThicknessModelTable","TriggerTable","UnitHeightDataTable","UnitWeightDataTable","UnitWeightTable","VibrationDataTable","WoodFuelSystemDataTable","WoodroomDataTable","WoodyardDataTable","WvCoWaxTrialTable"],"JEF":["_TEST","AROCFinishingAutoLabelPrinterTrend","BakeOutTable","Barcode_Error_Log","Barcode_InsertUnit_Audit","Barcode_PLCWIPMasterPanel_Insert_Audit","BlenderDowntimeTable","BlenderID","BlenderSnapShotTable","BlenderStopsTable","BlenderTotalizerTable","BlenderTotalizerTableCont","BlendingDataTable","BlendingSlackWax","BundleWeightDataTable","Consumption10MinuteTable","CrossCarriageTimersTable","CurrentProductTable","DowntimeRunningStatus","DowntimeTable","Dryer_CL","Dryer_SL","DryerClMPC","DryerDownTimeTable","DryerEfficiencyTable","DryerFireDumpDownTimeTable","DryerIDLookup","DryerMpcReport","DryerSlMPC","DryerSnapShotTable","EnvironmentalTable","ESPTable","EWSDataTable","EWSSummaryTable","FinishingDownTimeTable","FinishingLineHotLoadTable","FinishingTable","FinishingType","FlakerDownTimeTable","FlakerEastSLSnapshot","FlakerWestCLSnapshot","FLineSnapShotTable","FormerWeightTable","FuelTable","FurnaceCLGrateCamTable","FurnaceSLGrateCamTable","GlobeTable","GreenBin_CL","GreenBin_SL","KnifeChangeTable","LoaderMatLength","MasterWtTable","MatingChainSectionLengthTable","MillGeneral","MillSnapShotLineSpeedTable","MillSnapShotTable","NessTOH","NorthFurnanceTable","PanelBlisterTable","PanelPointThicknessTable","PanelThicknessTable","PressEfficiency","PressLoadPrecureOvercookTable","PressloadTable","PressLoadTroubleshoot","PressManTable","PressParametersTable","PressParameterTable","PressProgramTable","PressStatusDataTable","PressStepTable","PressTable","PressTemperatureTable","PressThermalOilTable","ProductTable","RawMaterialUnloadTable","RBS","RBSDowntime","RejectMatTable","RMW_M16","RMW_TankAndMeterReading","RMW_TankLevel","RMW_TotalizedMeterReading","RobotDataTable","RTO_North","RTO_South","RTOPressTable","ShiftEndTable","SicoTable","SnapShot","SouthFurnance","SSMAbortTable","SSMDryerShutdownTable","SSMDryerStartUpTable","SSMPressShutDownTable","SSMPressStartUpTable","Strander1DataByEvent","Strander2DataByEvent","TankFarmLevels","ThomasTable","TowBarSensorTable","TransactionTriggerValuesTable","UnitWeightTable","WoodFlowTable","WoodyardSnapshotTable"],"JOA":["_tblTemp_FinishingDowntimeDetails","_to_delete_RCA_tblDowntimeOcurrences_NorbordLegacy","AtomizerDataTable","Barcode_Error_Log","Barcode_PLCWeights_Insert_Audit","BiofilterLogTable","BlenderDowntimeTable","BlenderID","BlendingTable","BlisterTable","CurrentProductTable","DebarkerDataTable","DownTimeEventsStop","Dryer1RTOTable","Dryer1Table","Dryer1VfdDataTable","Dryer2RTOTable","Dryer2Table","Dryer2VfdDataTable","Dryer3RTOTable","Dryer3Table","Dryer3VfdDataTable","DryerDowntimeTable","DryerEfficiency","dtproperties","DustTable","EndOfShift","EnergyMonitorTable","EnvironmentalTable","EpochTable","FinishingDowntimeTable","FinishingTable","FlakerTable","FormingLineTable","FourPoint0Table","HeatEnergyATrainTable","HeatEnergyBTrainTable","HeatEnergyCommonTable","HeatEnergyCTrainTable","HeatEnergyEfficiency","JagEventID","JagEventTable","KnifeChangeStrander1Table","KnifeChangeStrander2Table","LiftStation","LogDataTable","LogLengthTable","MesDataTable","MesShiftEndTable","MoistureCalibrationTable","OpacityCalibrationTable","OpacityCalibrationTypeTable","PaintBoothEventTable","PaintBoothTable1","PanelScaleTable","PreHeaterTable","PreHeaterTableByMinute","PressEfficiencyTable","PressEfficiencyTable_Temp","PressHeatTable","PressInfeedDistancePressureTable","PressMotorsTable","PressOffsetsTable","PressOutfeedDistancePressureTable","PressSpecificPressures","ProcessLabAggregatedDataTable","Products","QualityMachineUtilization","RawMaterialUsageCont","RawMaterialUsageTable","RMW_M16","RMW_TankAndMeterReading","RMW_TankAndMeterReading_20250117","RMW_TankAndMeterReading_20250121","RMW_TankAndMeterReading_NEW_TANK_TAGS_to_delete","RMW_TankLevel","RMW_TotalizedMeterReading","RobotDataTable","ShiftEndTable","SmartWaxBlendingTable","SmartWaxRecipeTable","SmartWaxUsageCont","SSMAbortTable","StackBinTable","Strander1DataByEvent","Strander2DataByEvent","StranderArea","StranderDowntimeTable","StranderEndOfShift","Strapper1Table","Strapper2Table","TCOTable","Tisfoon","UnitHeightTable","UnitWeightTable","VariabilityBoardWeight","VibrationTable","WMSInSprocAudit","WoodyardTable"],"LAS":["Barcode_Error_Log","Barcode_StaplerData_Audit","BlenderDowntimeTable","BlenderID","BlendingDataTable","BookSawDownTime","CurrentProductTable","DebarkerDownTime","DebarkerShiftData","Dryer_1_DataTable","Dryer_2_DataTable","DryerDowntimeTable","DryerEfficiency","DryingDataTable","dtproperties","DustSysDataTable","ESPDownTimeTable","ESPTable","EventTableStrander","FillFactorStrander1","FillFactorStrander2","FinesBlendingTable","FinishingDataTable","FormingLineTable","HeatEnergyDataTable","HogBarkDataTable","LogLine_1_DataTable","LogLine_2_DataTable","LogLineDataTable","Magazine6DownTime","MasterWtTable","MillSnapShot","PanelPointThicknessTable","PanelThicknessTable","PanelWeightDataTable","PressDataTable","PressEfficency","PressloadTable","PressManTable","PressParametersTable","PressProgramTable","ProductionMaterialUsage","ProductRunAfterPressing","ProductRunBlending","ProductRunBlendingCont","ProductRunMatReject","ProductRunSetIDInfo","ProductRunSetIDInfo_Temp","ProductTrackingFinishing","PumpHouse_DataTable","RawMaterialUsage","ReportDataTable","RMW_M16","RMW_TankAndMeterReading","RMW_TankLevel","RMW_TotalizedMeterReading","RobotDataTable","SaltonDownTimeTable","SanderDowntimeTable","SandingLineEfficiency","StackTableUpdates","Strander1DataByEvent","Strander1KnifeChangeTable","Strander2DataByEvent","Strander2KnifeChangeTable","StranderDownTime","StranderKnifeChangeCycles","StranderPowerDemand","StranderShiftData","StrapperDownTime","sysdiagrams","TableConversionLookups","tbl_Cons_Pressage_Delay","tbl_cont_effi_gaufrier","tbl_curprodsum","tbl_currentId","tbl_downtime","tbl_ecorceur_bytes","tbl_ecorceur_datapoint","tbl_ecorceur_float","tbl_ecorceur_integer","tbl_ecorceur_rapport_gau__Config","tbl_ecorceur_rapport_gau_ecor","tbl_encolage_bytes","tbl_encolage_datapoint","tbl_encolage_float","tbl_encolage_integer","tbl_energie_bytes","tbl_energie_datapoint","tbl_energie_float","tbl_energie_integer","tbl_Filtre_2_Geom_Lam_Str_1","tbl_Filtre_2_Geom_Lam_Str_2","tbl_Filtre_Geom_Lam_Str_1","tbl_FinLigne_Bytes","tbl_FinLigne_datapoint","tbl_FinLigne_Float","tbl_FinLigne_Integer","tbl_gauf_moy_pr_po_100_pas_str_2","tbl_gauf_pouss_vs_nbre_pa_Config","tbl_gauf_pouss_vs_nbre_pas","tbl_gauffrier_bytes","tbl_gauffrier_datapoint","tbl_gauffrier_float","tbl_gauffrier_integer","Tbl_Hum_Cent_0906","Tbl_Hum_Cent_0907","Tbl_Hum_Surf_0906","Tbl_Hum_Surf_0907","tbl_LigneFormation_Bytes","tbl_LigneFormation_datapoint","tbl_LigneFormation_Float","tbl_LigneFormation_Integer","tbl_Presse_bytes","tbl_presse_datapoint","tbl_Presse_Float","tbl_Presse_Integer","tbl_Presse_Rap_dech","tbl_Presse_Rap_dech_Config","tbl_Presse_Rap_Presse","tbl_Presse_Rap_Presse_Config","tbl_PresseNo","tbl_product","tbl_product_AuditChanges","tbl_product_con","tbl_product_Config","tbl_product_Config2","tbl_product_ForSchrock","tbl_rap_cons_encol","tbl_rap_cons_encol_Config","tbl_sechoir_bytes","tbl_Sechoir_datapoint","tbl_Sechoir_Float","tbl_sechoir_integer","tbl_Shift","tbl_vol_prod_dern_com","tblEncollageTable","tblFormationTable","UnitSize","UsagesDataTable","v_sechoir_Config"],"NAC":["_TagManager_Test_Audit","Barcode_Error_Log","Barcode_InsertUnit_Audit","Barcode_PLCWeights_Insert_Audit","Barcode_PLCWIPMasterPanel_Insert_Audit","BlenderDowntimeTable","BlenderID","BlenderTable","BlenderTotalsTable","BlenderTotalsTableCont","ConditionEvent","CurrentProductTable","DownTimeTable","DryerDownTimeTable","DryersTable","DunnageRobotTable","EastFlakerSnapshotTable","EnviroTable","EWSDataTable","EWSSummaryTable","FinesBlenderTable","FinishingDownTimeTable","FinishingTable","FlakerDownTimeTable","FlakerETable","FlakerWTable","FlineTable","FTAEInstance","FuelTable","IPDryerTable","IPTexasTable","KonusTable","LineSpeedTable","MasterPanelWeight","MasterPanelWeightTable","MasterWtTable","MatDumpsTable","MatDumpType","MatPositionTable","NessTable","NestecTable","OSBUnitsTable","PLC_BTable","PLC_CTable","PressEfficiencyTable","PressLoadTable","PressParametersTable","PressProgramTable","PressScanTable","PressTable","PressTemperatureTable","Product","Product_20251112","Product1","ProductAudit","ProductChangeLogTable","ProductCodeTable","ProductRatingTable","RMW_M16","RMW_TankAndMeterReading","RMW_TankLevel","RMW_TotalizedMeterReading","RobotDataTable","RTOTable","SawChassis_Table","ShiftEndTable","SimpleEvent","SSMAbortTable","StatsTable","StorageTankTable","tblChartProperties","tblFormingLineMCRange","tblProcessVariableLimits","tblTagNames","TeafordTable","TrackingEvent","WeightControlTable","wespTable","WestFlakerSnapShotTable","WoodyardTable"]}; // MILL_TABLES_PLACEHOLDER
+
+
+  const SAWMILL_CODES=['NWB', 'DGM', 'MAP', 'OPE', 'HNM', 'LEO', 'ARM', 'NEW', 'JOY', 'ANG', 'RUS', 'MAN', 'FIT'];
+  const SAWMILL_TABLES=['CanterDataTable', 'DowntimeDataTable', 'DrySorterDataTable', 'DryStackerDataTable', 'DryerDataTable', 'EdgerDataTable', 'EnergyDataTable', 'EnvironmentalDataTable', 'FuelEnergyDataTable', 'GreenSorterDataTable', 'GreenStackerDataTable', 'GreenTrimmerDataTable', 'KilnDataTable', 'MerchDataTable', 'PlanerDataTable', 'SawlineDataTable', 'ShiftEndDataTable', 'UtilityDataTable'];
+  function isSawmill(){return SAWMILL_CODES.includes(document.getElementById("millSelect").value);}
+
+  function getMillTables(){
+    const mill=document.getElementById("millSelect").value;
+    if(isSawmill()) return SAWMILL_TABLES;
+    return MILL_TABLES[mill]||[];
+  }
+
+  function mkTableNameField(val){
+    const wrap=document.createElement("div");wrap.style.position="relative";
+    const tables=getMillTables();
+    const hasTables=tables.length>0;
+
+    // Search input (always shown)
+    const inp=document.createElement("input");
+    inp.type="text";inp.className="ci tableName-text";
+    inp.value=val||"";
+    inp.placeholder=hasTables?"Search or type table name...":"Type table name...";
+    inp.setAttribute("autocomplete","off");
+
+    // Dropdown list
+    const drop=document.createElement("div");
+    drop.style.cssText="position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--wf);border-radius:6px;z-index:9999;max-height:180px;overflow-y:auto;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.15);margin-top:2px;";
+
+    function renderDrop(filter){
+      drop.innerHTML="";
+      if(!hasTables){drop.style.display="none";return;}
+      const f=(filter||"").toLowerCase();
+      const matches=tables.filter(t=>t.toLowerCase().includes(f));
+      if(!matches.length){drop.style.display="none";return;}
+      matches.forEach(t=>{
+        const item=document.createElement("div");
+        item.textContent=t;
+        item.style.cssText="padding:7px 10px;font-size:12px;cursor:pointer;color:var(--g900);border-bottom:1px solid var(--g100);";
+        item.addEventListener("mousedown",function(e){
+          e.preventDefault();inp.value=t;drop.style.display="none";chkDups();
+        });
+        item.addEventListener("mouseenter",function(){this.style.background="var(--wf-light)";});
+        item.addEventListener("mouseleave",function(){this.style.background="";});
+        drop.appendChild(item);
+      });
+      // Show temporarily to measure, then position
+      drop.style.display="block";
+      drop.style.top="100%";
+      drop.style.bottom="auto";
+      const rect=inp.getBoundingClientRect();
+      const spaceBelow=window.innerHeight-rect.bottom;
+      const spaceAbove=rect.top;
+      const dropH=Math.min(drop.scrollHeight,180);
+      if(spaceBelow<dropH&&spaceAbove>spaceBelow){
+        drop.style.top="auto";
+        drop.style.bottom="100%";
+        drop.style.marginTop="0";
+        drop.style.marginBottom="2px";
+        drop.style.boxShadow="0 -4px 12px rgba(0,0,0,0.15)";
+      } else {
+        drop.style.top="100%";
+        drop.style.bottom="auto";
+        drop.style.marginTop="2px";
+        drop.style.marginBottom="0";
+        drop.style.boxShadow="0 4px 12px rgba(0,0,0,0.15)";
+      }
+    }
+
+    inp.addEventListener("focus",function(){renderDrop(this.value);});
+    inp.addEventListener("input",function(){renderDrop(this.value);chkDups();});
+    inp.addEventListener("blur",function(){setTimeout(()=>{drop.style.display="none";},200);});
+    inp.addEventListener("keydown",function(e){
+      const items=[...drop.querySelectorAll("div")];
+      const activeIdx=items.findIndex(i=>i.classList.contains("tn-active"));
+      if(e.key==="ArrowDown"){
+        e.preventDefault();
+        if(activeIdx>=0)items[activeIdx].classList.remove("tn-active");
+        const next=items[activeIdx+1]||items[0];
+        if(next){next.classList.add("tn-active");next.style.background="var(--wf-light)";}
+      } else if(e.key==="ArrowUp"){
+        e.preventDefault();
+        if(activeIdx>=0)items[activeIdx].classList.remove("tn-active");
+        const prev=items[activeIdx-1]||items[items.length-1];
+        if(prev){prev.classList.add("tn-active");prev.style.background="var(--wf-light)";}
+      } else if(e.key==="Enter"){
+        const active=drop.querySelector(".tn-active");
+        if(active){e.preventDefault();inp.value=active.textContent;drop.style.display="none";chkDups();}
+      } else if(e.key==="Escape"){drop.style.display="none";}
+    });
+
+    wrap.appendChild(inp);wrap.appendChild(drop);
+    return wrap;
+  }
+  function getTableName(r){return r.querySelector(".tableName-text")?.value||"";}
+
+  function addRow(data={}){
+    const tb=document.getElementById("tbody"),tr=document.createElement("tr");
+    function td(cls,el){const c=document.createElement("td");if(cls)c.className=cls;if(el)c.appendChild(el);return c;}
+    function inp(cls,val,ph){const i=document.createElement("input");i.type="text";i.className="ci "+cls;i.value=val||"";i.placeholder=ph||"";return i;}
+    const tn=mkTableNameField(data.tableName||"");
+    const tg=inp("tagName",data.tagName,"e.g. BladeSpeedRpm");
+    const ip=inp("plcAddress",data.plcAddress,"192.168.x.x");
+    const pp=inp("plcPath",data.plcPath,"PLC tag path");
+    const ds=mkDTSelect(data.dataType);
+    const uw=mkUnitsSearch(data.units||"");
+    const fr=inp("transactionFrequency",data.transactionFrequency,"e.g. 5 s, 1 min, Unscheduled");
+    const dc=inp("tagDescription",data.tagDescription,"What does this tag measure?");
+    const mn=inp("min",data.min,"e.g. 0");
+    const mx=inp("max",data.max,"e.g. 100");
+    const ntd=document.createElement("td");ntd.className="cbtd";
+    const cb=document.createElement("input");cb.type="checkbox";cb.className="newTable";if(data.newTable)cb.checked=true;ntd.appendChild(cb);
+    const rtd=document.createElement("td");
+    const rb=document.createElement("button");rb.className="rmbtn";rb.textContent="x";
+    rb.onclick=function(){tr.remove();upEmpty();upJust();chkDups();};rtd.appendChild(rb);
+    tr.appendChild(td("col-tbl",tn));tr.appendChild(td("col-tag",tg));tr.appendChild(td("col-ip",ip));
+    tr.appendChild(td("col-path",pp));tr.appendChild(td("col-dt",ds));tr.appendChild(td("col-u",uw));
+    tr.appendChild(td("col-fr",fr));tr.appendChild(td("col-desc",dc));tr.appendChild(td("col-mn",mn));
+    tr.appendChild(td("col-mx",mx));tr.appendChild(ntd);tr.appendChild(rtd);
+    tg.addEventListener("input",chkDups);
+
+    ip.addEventListener("blur",()=>valIP(ip));tg.addEventListener("blur",()=>{valTag(tg);chkDups();});
+    mn.addEventListener("blur",()=>valNum(mn,"Min"));mx.addEventListener("blur",()=>valNum(mx,"Max"));
+    fr.addEventListener("input",upJust);
+    tb.appendChild(tr);upEmpty();
+    // Run validation immediately so warnings show on import
+    valIP(ip);valTag(tg);valNum(mn,"Min");valNum(mx,"Max");
+  }
+
+  const IPR=/^(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)(?::\d{1,5})?$/;
+  function clrMsg(el){el.parentElement.querySelectorAll(".msg,.dup-msg").forEach(m=>m.remove());el.classList.remove("err","dup","warn");}
+  function addMsg(el,txt,t){clrMsg(el);const d=document.createElement("div");d.className="msg warn";d.textContent=txt;el.parentElement.appendChild(d);el.classList.add("warn");}
+  function valIP(el){
+    clrMsg(el);
+    if(!el.value)return true;
+    const v=el.value.trim();
+    if(/,/.test(v)){addMsg(el,'Use . instead of , in IP address (e.g. 192.168.1.10)',"warn");return true;}
+    if(!IPR.test(v)){addMsg(el,"Prefer a direct IP address (e.g. 192.168.1.10)","warn");return true;}
+    return true;
+  }
+  function valTag(el){
+    clrMsg(el);
+    const v=el.value.trim();
+    if(!v)return true;
+    if(/_/.test(v)){addMsg(el,"Avoid underscores in tag name (e.g. BladeSpeedRpm)","warn");return true;}
+    return true;
+  }
+  function valNum(el,lbl){
+    clrMsg(el);
+    if(!el.value)return true;
+    const v=el.value.trim();
+    if(/,/.test(v)){addMsg(el,'Use . instead of , (e.g. 1.5)',"warn");return true;}
+    if(!/^-?\d*\.?\d*$/.test(v)){addMsg(el,lbl+" must be a number","warn");return true;}
+    return true;
+  }
+  function chkDups(){
+    const rows=document.querySelectorAll("#tbody tr");
+    const ct={};
+    rows.forEach(r=>{
+      const t=getTableName(r).trim().toLowerCase();
+      const n=(r.querySelector(".tagName")?.value||"").trim().toLowerCase();
+      if(n){const k=t+"|"+n;ct[k]=(ct[k]||0)+1;}
+    });
+    rows.forEach(r=>{
+      const tg=r.querySelector(".tagName");
+      const t=getTableName(r).trim().toLowerCase();
+      const n=(tg?.value||"").trim().toLowerCase();
+      const isDup=!!(n&&ct[t+"|"+n]>1);
+      if(tg){
+        // Remove existing dup messages
+        tg.parentElement.querySelectorAll(".dup-msg").forEach(m=>m.remove());
+        tg.classList.toggle("dup",isDup);
+        if(isDup){
+          tg.classList.add("warn");
+          const d=document.createElement("div");
+          d.className="msg warn dup-msg";
+          d.textContent="Duplicate tag name in this table";
+          tg.parentElement.appendChild(d);
+        } else {
+          // Not a dup — re-run valTag so the underscore warning (and its yellow box) is preserved
+          valTag(tg);
+        }
+      }
+    });
+    return Object.values(ct).every(c=>c<=1);
+  }
+  function upJust(){const h=Array.from(document.querySelectorAll(".transactionFrequency")).some(s=>s.value.trim().toLowerCase().startsWith("1 s")||s.value.trim()==="1s");document.getElementById("justBox").style.display=h?"block":"none";}
+  function valAll(){
+    let ok=true;
+    document.querySelectorAll("#tbody tr").forEach(r=>{
+      const tagEl=r.querySelector(".tagName");
+      const minEl=r.querySelector(".min");
+      const maxEl=r.querySelector(".max");
+      const ipEl=r.querySelector(".plcAddress");
+      // Force clear and re-run all validations so messages show immediately
+      if(tagEl){clrMsg(tagEl);ok=valTag(tagEl)&&ok;}
+      if(minEl){clrMsg(minEl);ok=valNum(minEl,"Min")&&ok;}
+      if(maxEl){clrMsg(maxEl);ok=valNum(maxEl,"Max")&&ok;}
+      if(ipEl){clrMsg(ipEl);valIP(ipEl);}
+    });
+    return ok;
+  }
+  function clearAll(){if(!confirm("Clear all rows?"))return;document.getElementById("tbody").innerHTML="";document.getElementById("pasteArea").value="";upEmpty();upJust();}
+  function toggleNT(v){document.querySelectorAll(".newTable").forEach(cb=>cb.checked=v);}
+  function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+  function getSubj(){const mill=document.getElementById("millSelect").value;const n=document.querySelectorAll("#tbody tr").length;const d=new Date().toLocaleDateString();const u=document.getElementById("urgFlag").checked;return mill+" Tag Request: "+n+" tags on "+d+(u?" [URGENT]":"");}
+  function copyTable(){
+    valAll();chkDups(); // show warnings but don't block
+    const rows=document.querySelectorAll("#tbody tr");
+    let html='<table border="1" style="border-collapse:collapse;font-family:sans-serif;font-size:13px"><thead><tr><th>TableName</th><th>TagName</th><th>PLCIPAddress</th><th>PLCPath</th><th>DataType</th><th>Units</th><th>TransactionFrequency</th><th>TagDescription</th><th>Min</th><th>Max</th><th>NewTable?</th></tr></thead><tbody>';
+    rows.forEach(r=>{const dt=normDT(r.querySelector(".dataType-input")?.value||"");const uv=(()=>{const v=r.querySelector(".units-value")?.value||"";const m=UOM.find(u=>(u.u+" ("+u.d+")").toLowerCase()===v.toLowerCase());return m?m.u:v;})();html+="<tr><td>"+esc(getTableName(r))+"</td><td>"+esc(r.querySelector(".tagName")?.value||"")+"</td><td>"+esc(r.querySelector(".plcAddress")?.value||"")+"</td><td>"+esc(r.querySelector(".plcPath")?.value||"")+"</td><td>"+esc(dt)+"</td><td>"+esc(uv)+"</td><td>"+esc(r.querySelector(".transactionFrequency")?.value||"")+"</td><td>"+esc(r.querySelector(".tagDescription")?.value||"")+"</td><td>"+esc(r.querySelector(".min")?.value||"")+"</td><td>"+esc(r.querySelector(".max")?.value||"")+"</td><td>"+(r.querySelector(".newTable")?.checked?"Yes":"No")+"</td></tr>";});
+    html+="</tbody></table>";
+    const a1=Array.from(document.querySelectorAll(".transactionFrequency")).some(s=>s.value.trim().toLowerCase().startsWith("1 s")||s.value.trim()==="1s");
+    if(a1){const j=document.getElementById("just1s").value||"";html+="<br><b>1s justification:</b> "+esc(j);}
+    if(navigator.clipboard&&navigator.clipboard.write){navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([html],{type:"text/html"})})]).then(()=>alert("Copied! Paste into your email.")).catch(()=>fb(html));}else fb(html);
+  }
+  function fb(html){const d=document.createElement("div");d.style.cssText="position:fixed;left:-9999px";d.contentEditable="true";d.innerHTML=html;document.body.appendChild(d);const r=document.createRange();r.selectNodeContents(d);const s=window.getSelection();s.removeAllRanges();s.addRange(r);try{document.execCommand("copy");alert("Copied! Paste into your email.");}catch(e){alert("Copy failed.");}document.body.removeChild(d);}
+  function doSubmit(){
+    valAll();chkDups(); // run to show warnings/errors but don't block
+    if(!confirm("Have all tags been confirmed against the TagsRUs standard?"))return;
+    const subj=getSubj();window.location.href="mailto:wfm-tagsrus@westfraser.com?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent("Please paste your copied table into the body of this email.");
+  }
+  window.addEventListener("DOMContentLoaded",()=>{updateUI();upEmpty();});
+</script>
+</body>
+</html>
