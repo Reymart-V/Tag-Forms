@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang = "en">
+	<head>
+
+		<meta charset = "UTF-8"/>
+		<meta name = "viewport" content = "width=device-width, initial-scale=1.0"/>
+		<title>Tag Request Form - West Fraser</title>
+		<link href ="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet"/>
+		<script src = "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>       <!--For CSV and excel parsing-->
+		<link rel = "stylesheet" href = "styles.css"/>
+		<script src = "form.js" defer></script>
+
+	</head>
+	<body>
+
+
+		<!--HEADER-->
+		<header class = "header">
+			<div class = "header-inner">
+				<div class ="header-logo">
+					<img src = " " alt = "West Fraser Logo"/>   
+					<div class = "header-title">
+						<h1> Tag Request Form</h1>
+						<p> ROC - OSB &amp; Sawmill Form</p>
+					</div>
+				</div>
+				<div class = "header-version">v.1.9</div>
+			</div>
+		</header>
+
+
+		<!--INSTRUCTIONS-->
+		<div class = "main">
+			<div class = "card-clip">
+				<div class = "instruction-label"> How to submit a tag request</div>
+				<div class = "steps-grid">
+					<div class = "step">
+						<h2>Step 1</h2>
+						<p>Select your mill from the dropdown below.</p>
+					</div>
+						<div class = "step">
+						<h2>Step 2</h2>
+						<p>Add rows manually or paste from Excel using the template.</p>
+					</div>
+						<div class = "step">
+						<h2>Step 3</h2>
+						<p>Use a PLC IP address so the ROC can locate your tag quickly</p>
+					</div>
+						<div class = "step">
+						<h2>Step 4</h2>
+						<p>Review your tag requests before submitting.</p>
+					</div>
+					<div class = "step">
+						<h2>Step 5</h2>
+						<p>Copy table, click Submit, then paste into the email that opens</p>
+					</div>						
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<!--RULES-->
+	  <div class = "main-rules">
+			<div class = "rules-label">Naming & Data Type Rules</div>
+			<div class = "rules-grid">
+				<div class = "rule-1">
+					<h2>Tag Name Rules</h2>
+					<ul>
+						<li>Use underscores instead of spaces</li>
+						<li>Start with a letter, not a number or special character</li>
+						<li>Avoid using reserved words like "select" or "table"</li>
+						<li>Be descriptive but concise</li>
+					</ul>
+				</div>
+				<div class = "rule-2">
+					<h2>Data Type Rules</h2>
+					<ul>
+						<li>Use standard PLC data types (e.g. REAL, INT, BOOL)</li>
+						<li>Avoid using vendor-specific or custom data types</li>
+						<li>Ensure the data type matches the expected value range and format</li>
+						<li>Refer to the provided data type mapping for guidance</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+
+		<!--MILL DROPDOWN-->
+		<div class = "mill-dropdown">
+			<div class = "dropdown-label">Select Your Mill</div>
+			<label for = "mill-select">Choose a mill</label>
+			<select id = "mill-select">
+				<optgroup label = "OSBMills">
+					<option value="ALD">ALD</option>
+            <option value="BEM">BEM</option>
+            <option value="BWK">BWK</option>
+            <option value="CHA">CHA</option>
+            <option value="COR">COR</option>
+            <option value="GP">GP</option>
+            <option value="GUN">GUN</option>
+            <option value="HL">HL</option>
+            <option value="HUG">HUG</option>
+            <option value="JEF">JEF</option>
+            <option value="JOA">JOA</option>
+            <option value="LAS">LAS</option>
+            <option value="NAC">NAC</option>
+				</optgroup>
+				<optgroup label = "Saw Mills">
+						<option value="NWB">NWB</option>
+            <option value="DGM">DGM</option>
+            <option value="MAP">MAP</option>
+            <option value="OPE">OPE</option>
+            <option value="HNM">HNM</option>
+            <option value="LEO">LEO</option>
+            <option value="ARM">ARM</option>
+            <option value="NEW">NEW</option>
+            <option value="JOY">JOY</option>
+            <option value="ANG">ANG</option>
+            <option value="RUS">RUS</option>
+            <option value="MAN">MAN</option>
+            <option value="FIT">FIT</option>
+				</optgroup>
+			</select>
+		</div>
+		
+
+		<!--TAG REQUEST TABLE-->
+		<div class = "tag-request-table">
+			<table id = "tag-table">
+				<thead>
+					<tr>
+						<th>Tag Name</th>
+						<th>Data Type</th>
+						<th>PLC IP Address</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody id = "table-body">
+					
+			</table>
+		</div>
+
+
+		<!--ENTRY OPTIONS-->
+		<div class = "entry-options">
+			<div class = "manual-entry">
+				<button id = "manual-button">Add Row Manually</button>
+			</div>
+			<div class = "paste-entry">
+				<button id = "paste-button">Paste from Excel</button>
+			</div>
+		</div>
+
+
+		<!--TAG REQUEST ROWS-->
+		<div class = "tag-request-table">
+			<table id = "tag-table">
+				<thead>
+					<tr>
+						<th>Tag Name</th>
+						<th>Data Type</th>
+						<th>PLC IP Address</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody id = "table-body">
+					<!--Rows will be added here dynamically-->
+				</tbody>
+			</table>
+			<div class = "table-buttons">
+				<button id = "add-row-button">Add Row</button>
+				<button id = "copy-button">Copy Table</button>'
+				<button id = "clear-button">Clear Table</button>
+				<button id = "download-button">Download Excel Template</button>
+				<button id = "submit-button">Submit Request</button>
+			</div>
+		</div>
+
+	</body>
+</html>
