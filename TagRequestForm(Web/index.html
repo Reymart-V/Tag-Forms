@@ -1,158 +1,215 @@
 <!DOCTYPE html>
-<html lang = "en">
-	<head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tag Request Form — West Fraser</title>
 
-		<meta charset = "UTF-8"/>
-		<meta name = "viewport" content = "width=device-width, initial-scale=1.0"/>
-		<title>Tag Request Form - West Fraser</title>
-		<link href ="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet"/>
-		<script src = "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>       <!--For CSV and excel parsing-->
-		<link rel = "stylesheet" href = "styles.css"/>
-		<script src = "form.js" defer></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
 
-	</head>
-	<body>
+    <!-- CSV / Excel paste parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
+    <!-- Our styles and logic -->
+    <link rel="stylesheet" href="styles.css" />
+    <script src="form.js" defer></script>
+</head>
+<body>
 
-		<!--HEADER-->
-		<header class = "header">
-			<div class = "header-inner">
-				<div class ="header-logo">
-					<img src = "./west-fraser-logo.jpg" alt = "West Fraser Logo"/>   
-					<div class = "header-title">
-						<h1> Tag Request Form</h1>
-						<p> ROC - OSB &amp; Sawmill Form</p>
-					</div>
-				</div>
-				<div class = "header-version">v.1.9</div>
-			</div>
-		</header>
+    <!-- ============ HEADER ============ -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-logo">
+                <img src="./west-fraser-logo.jpg" alt="West Fraser Logo" />
+                <div class="header-title">
+                    <h1>Tag Request Form</h1>
+                    <p>ROC — OSB &amp; Sawmill Form</p>
+                </div>
+            </div>
+            <div class="header-version">v1.9</div>
+        </div>
+    </header>
 
+    <div class="main">
 
-		<!--INSTRUCTIONS-->
-		<div class = "main">
-			<div class = "card-clip">
-				<div class = "instruction-label"> How to submit a tag request</div>
-				<div class = "steps-grid">
-					<div class = "step">
-						<h2>Step 1</h2>
-						<p>Select your mill from the dropdown below.</p>
-					</div>
-					<div class = "step">
-						<h2>Step 2</h2>
-						<p>Add rows manually or paste from Excel using the template.</p>
-					</div>
-					<div class = "step">
-						<h2>Step 3</h2>
-						<p>Use a PLC IP address so the ROC can locate your tag quickly</p>
-					</div>
-					<div class = "step">
-						<h2>Step 4</h2>
-						<p>Review your tag requests before submitting.</p>
-					</div>
-					<div class = "step">
-						<h2>Step 5</h2>
-						<p>Copy table, click Submit, then paste into the email that opens</p>
-					</div>						
-				</div>
-			</div>
-		</div>
+        <!-- ============ INSTRUCTIONS ============ -->
+        <div class="card card-pad">
+            <div class="section-label">How to submit a tag request</div>
+            <div class="steps-grid">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <p><strong>Select your mill</strong> from the dropdown below.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <p><strong>Add rows</strong> manually or <strong>paste from Excel</strong> using the template.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <p><strong>Use a PLC IP address</strong> so the ROC can locate your tag quickly.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <p><strong>Fix any warnings</strong> highlighted in orange before submitting.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <p><strong>Copy table</strong>, click <strong>Submit</strong>, then paste into the email that opens.</p>
+                </div>
+            </div>
+        </div>
 
+        <!-- ============ NAMING & DATA TYPE RULES ============ -->
+        <div class="card card-pad">
+            <div class="section-label">Naming &amp; data type rules</div>
+            <div class="rules-grid">
+                <div class="rule">
+                    <h2>Tag name conventions</h2>
+                    <ul>
+                        <li>TitleCase with no spaces, underscores, or special characters</li>
+                        <li>Use Left and Right instead of East, West, North, or South</li>
+                        <li>Put the delineation at the end: <span class="code-good">FormerHeight1</span> not <span class="code-bad">Former1Height</span></li>
+                        <li>Be descriptive but succinct: <span class="code-good">BlenderSpeedHzCL2</span> not <span class="code-bad">CL2BlenderSpeed</span></li>
+                    </ul>
+                </div>
+                <div class="rule rule-warning">
+                    <h2>BIT data type is not permitted</h2>
+                    <p>BITs cause conflicting display patterns in downstream applications. Use INT instead — it stores and displays the same on/off information.</p>
+                </div>
+            </div>
+            <p class="rules-note">
+                <strong>Note:</strong> Orange warnings help the ROC team complete your request faster but are not required to fix before submitting.
+            </p>
+        </div>
 
-		<!--RULES-->
-	  <div class = "main-rules">
-			<div class = "rules-label">Naming & Data Type Rules</div>
-			<div class = "rules-grid">
-				<div class = "rule">
-					<h2>Tag Name Conventions</h2>
-					<ul>
-						<li>TitleCase with no spaces, underscores, or special characters</li>
-						<li>Use Left and Right instea od East, West, North or South</li>
-						<li>Put the deliniation at the end FormerHeight no Former1Height</li>
-						<li>Be descriptive but succing: Blender SpeecHzCL2 not CLBlenderSpeed</li>
-					</ul>
-				</div>
-				<div class = "rule">
-					<h2>Bit data type is not permitted</h2>
-					 <p>BITs cause conflicting display pattern sin downstream applications. Use INT instead</p>
-				</div>
-			</div>
-		</div>
+        <!-- ============ MILL SELECT + URGENT ============ -->
+        <div class="card card-pad">
+            <div class="mill-row">
+                <div class="field">
+                    <label for="millSelect">Mill</label>
+                    <select id="millSelect" onchange="updateUI()">
+                        <option value="">— Select a mill —</option>
+                        <optgroup label="OSB Mills">
+                            <option value="ALD">ALD</option>
+                            <option value="BEM">BEM</option>
+                            <option value="BWK">BWK</option>
+                            <option value="CHA">CHA</option>
+                            <option value="COR">COR</option>
+                            <option value="GP">GP</option>
+                            <option value="GUN">GUN</option>
+                            <option value="HL">HL</option>
+                            <option value="HUG">HUG</option>
+                            <option value="JEF">JEF</option>
+                            <option value="JOA">JOA</option>
+                            <option value="LAS">LAS</option>
+                            <option value="NAC">NAC</option>
+                        </optgroup>
+                        <optgroup label="Sawmills">
+                            <option value="NWB">NWB</option>
+                            <option value="DGM">DGM</option>
+                            <option value="MAP">MAP</option>
+                            <option value="OPE">OPE</option>
+                            <option value="HNM">HNM</option>
+                            <option value="LEO">LEO</option>
+                            <option value="ARM">ARM</option>
+                            <option value="NEW">NEW</option>
+                            <option value="JOY">JOY</option>
+                            <option value="ANG">ANG</option>
+                            <option value="RUS">RUS</option>
+                            <option value="MAN">MAN</option>
+                            <option value="FIT">FIT</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <label class="urgent-toggle" id="urgLbl">
+                    <input type="checkbox" id="urgFlag" onchange="this.closest('.urgent-toggle').classList.toggle('on', this.checked)" />
+                    <span>Mark as urgent</span>
+                </label>
+            </div>
+        </div>
 
+        <!-- ============ ENTRY MODE TABS ============ -->
+        <div class="entry-tabs">
+            <button class="entry-tab active" id="tabManual" onclick="switchTab('manual')" disabled>
+                <span class="entry-tab-title">Manual entry</span>
+                <span class="entry-tab-sub">Add rows one at a time using the table below</span>
+            </button>
+            <button class="entry-tab" id="tabPaste" onclick="switchTab('paste')" disabled>
+                <span class="entry-tab-title">Paste from Excel</span>
+                <span class="entry-tab-sub">Copy from the Excel template and import all at once</span>
+            </button>
+        </div>
 
-		<!--MILL DROPDOWN-->
-		<div class = "mill-dropdown">
-			<div class = "dropdown-label">Select Your Mill</div>
-			<label for = "mill-select">Choose a mill</label>
-			<select id = "mill-select" onchange = "updateUI()">
-				<optgroup label = "OSBMills">
-						<option value="ALD">ALD</option>
-            <option value="BEM">BEM</option>
-            <option value="BWK">BWK</option>
-            <option value="CHA">CHA</option>
-            <option value="COR">COR</option>
-            <option value="GP">GP</option>
-            <option value="GUN">GUN</option>
-            <option value="HL">HL</option>
-            <option value="HUG">HUG</option>
-            <option value="JEF">JEF</option>
-            <option value="JOA">JOA</option>
-            <option value="LAS">LAS</option>
-            <option value="NAC">NAC</option>
-				</optgroup>
-				<optgroup label = "Saw Mills">
-						<option value="NWB">NWB</option>
-            <option value="DGM">DGM</option>
-            <option value="MAP">MAP</option>
-            <option value="OPE">OPE</option>
-            <option value="HNM">HNM</option>
-            <option value="LEO">LEO</option>
-            <option value="ARM">ARM</option>
-            <option value="NEW">NEW</option>
-            <option value="JOY">JOY</option>
-            <option value="ANG">ANG</option>
-            <option value="RUS">RUS</option>
-            <option value="MAN">MAN</option>
-            <option value="FIT">FIT</option>
-				</optgroup>
-			</select>
-		</div>
-		
+        <!-- ============ PASTE PANEL (hidden until paste tab) ============ -->
+        <div class="paste-panel" id="pastePanel">
+            <div class="paste-top">
+                <div>
+                    <div class="paste-title">Paste from Excel</div>
+                    <div class="paste-subtitle">Copy rows from the template (including the header) and paste below</div>
+                </div>
+                <div class="paste-buttons">
+                    <button class="btn btn-grey" onclick="openExcelTemplate()">Open Excel template</button>
+                    <button class="btn btn-primary" id="processBtn" onclick="processExcelData()" disabled>Import rows</button>
+                </div>
+            </div>
+            <textarea id="pasteArea" placeholder="Select your mill first, then paste your Excel data here." disabled></textarea>
+            <div class="paste-hint">Tip: include the header row when copying — the importer will detect column order automatically.</div>
+        </div>
 
-		<!--ENTRY OPTIONS-->
-		<div class = "entry-options">
-			<div class = "manual-entry">
-				<button id = "manual-button">Add Row Manually</button>
-			</div>
-			<div class = "paste-entry">
-				<button id = "paste-button">Paste from Excel</button>
-			</div>
-		</div>
+        <!-- ============ TAG DATA TABLE ============ -->
+        <div class="card">
+            <div class="entry-header">
+                <h2>Tag data</h2>
+                <span id="rowCounter" class="row-counter">0 rows</span>
+            </div>
+            <div class="table-wrap">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th class="col-table req">Table name</th>
+                            <th class="col-tag req">Tag name</th>
+                            <th class="col-ip">PLC IP address</th>
+                            <th class="col-path">PLC path</th>
+                            <th class="col-datatype req">Data type</th>
+                            <th class="col-units">Units</th>
+                            <th class="col-freq">Frequency</th>
+                            <th class="col-desc">Description</th>
+                            <th class="col-min">Min</th>
+                            <th class="col-max">Max</th>
+                            <th class="col-newtable">New table?</th>
+                            <th class="col-remove"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+                <div id="emptyState" class="empty-state">
+                    No tags yet. Click <strong>Add row</strong> or paste from Excel above.
+                </div>
+            </div>
+        </div>
 
+        <!-- ============ 1-SECOND JUSTIFICATION ============ -->
+        <div class="just-box" id="justBox">
+            <label>Justification required for 1-second polling</label>
+            <textarea id="just1s" placeholder="Explain why 1-second polling is needed for these tags..."></textarea>
+        </div>
 
-		<!--TAG REQUEST ROWS-->
-		<div class = "tag-request-table">
-			<table id = "tag-table">
-				<thead>
-					<tr>
-						<th>Tag Name</th>
-						<th>Data Type</th>
-						<th>PLC IP Address</th>
-						<th>Description</th>
-					</tr>
-				</thead>
-				<tbody id = "table-body">
-					<!--Rows will be added here dynamically-->
-				</tbody>
-			</table>
-			<div class = "table-buttons">
-				<button id = "add-row-button">Add Row</button>
-				<button id = "copy-button">Copy Table</button>
-				<button id = "clear-button">Clear Table</button>
-				<button id = "download-button">Download Excel Template</button>
-				<button id = "submit-button">Submit Request</button>
-			</div>
-		</div>
+        <!-- ============ ACTION BAR ============ -->
+        <div class="actions">
+            <div class="actions-left">
+                <button class="btn btn-grey" id="addBtn" onclick="addRow()" disabled>+ Add row</button>
+                <button class="btn btn-grey" id="clrBtn" onclick="clearAll()" disabled>Clear all</button>
+                <button class="btn btn-grey" id="chkAllBtn" onclick="toggleNT(true)" disabled>Check all new table</button>
+                <button class="btn btn-grey" id="unchkBtn" onclick="toggleNT(false)" disabled>Uncheck all new table</button>
+            </div>
+            <div class="actions-right">
+                <button class="btn btn-grey" id="copyBtn" onclick="copyTable()" disabled>Copy table</button>
+                <button class="btn btn-submit" id="subBtn" onclick="doSubmit()" disabled>Submit request</button>
+            </div>
+        </div>
 
-	</body>
+    </div>
+
+</body>
 </html>
