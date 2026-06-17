@@ -2,7 +2,7 @@
   const DT = ["Real","Float","Dint","Sint","Uint","Int","Smallint","Bigint","String","Word","Nvarchar","Datetime","Bool","Bit","Byte"];
   const plcMap = (()=>{const m=new Map();["real","float","double"].forEach(v=>m.set(v,"float"));["int","integer","dint","sint","uint","smallint","bigint","byte"].forEach(v=>m.set(v,"int"));["nvarchar","nvar","string","word","char","nchar","varchar"].forEach(v=>m.set(v,"nvarchar"));["bool","bit","boolean"].forEach(v=>m.set(v,"bit"));return m;})();
   function normDT(dt){const r=String(dt||"").trim().toLowerCase();return plcMap.get(r)||dt;}
-  const UOM=[
+  const UOM=[ n  
     {u:"%",d:"percent"},{u:"A",d:"amps"},{u:"APM",d:"arcs per minute"},{u:"Bar",d:"metric pressure"},
     {u:"btu",d:"British Thermal Unit"},{u:"deg",d:"degrees"},{u:"deg C",d:"degrees Celsius"},
     {u:"deg F",d:"degrees Fahrenheit"},{u:"ft",d:"feet"},{u:"ft/min",d:"feet per minute"},

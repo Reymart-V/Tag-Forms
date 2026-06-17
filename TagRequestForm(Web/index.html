@@ -38,15 +38,15 @@
 						<h2>Step 1</h2>
 						<p>Select your mill from the dropdown below.</p>
 					</div>
-						<div class = "step">
+					<div class = "step">
 						<h2>Step 2</h2>
 						<p>Add rows manually or paste from Excel using the template.</p>
 					</div>
-						<div class = "step">
+					<div class = "step">
 						<h2>Step 3</h2>
 						<p>Use a PLC IP address so the ROC can locate your tag quickly</p>
 					</div>
-						<div class = "step">
+					<div class = "step">
 						<h2>Step 4</h2>
 						<p>Review your tag requests before submitting.</p>
 					</div>
@@ -54,7 +54,6 @@
 						<h2>Step 5</h2>
 						<p>Copy table, click Submit, then paste into the email that opens</p>
 					</div>						
-					</div>
 				</div>
 			</div>
 		</div>
@@ -64,23 +63,18 @@
 	  <div class = "main-rules">
 			<div class = "rules-label">Naming & Data Type Rules</div>
 			<div class = "rules-grid">
-				<div class = "rule-1">
-					<h2>Tag Name Rules</h2>
+				<div class = "rule">
+					<h2>Tag Name Conventions</h2>
 					<ul>
-						<li>Use underscores instead of spaces</li>
-						<li>Start with a letter, not a number or special character</li>
-						<li>Avoid using reserved words like "select" or "table"</li>
-						<li>Be descriptive but concise</li>
+						<li>TitleCase with no spaces, underscores, or special characters</li>
+						<li>Use Left and Right instea od East, West, North or South</li>
+						<li>Put the deliniation at the end FormerHeight no Former1Height</li>
+						<li>Be descriptive but succing: Blender SpeecHzCL2 not CLBlenderSpeed</li>
 					</ul>
 				</div>
-				<div class = "rule-2">
-					<h2>Data Type Rules</h2>
-					<ul>
-						<li>Use standard PLC data types (e.g. REAL, INT, BOOL)</li>
-						<li>Avoid using vendor-specific or custom data types</li>
-						<li>Ensure the data type matches the expected value range and format</li>
-						<li>Refer to the provided data type mapping for guidance</li>
-					</ul>
+				<div class = "rule">
+					<h2>Bit data type is not permitted</h2>
+					 <p>BITs cause conflicting display pattern sin downstream applications. Use INT instead</p>
 				</div>
 			</div>
 		</div>
@@ -90,9 +84,9 @@
 		<div class = "mill-dropdown">
 			<div class = "dropdown-label">Select Your Mill</div>
 			<label for = "mill-select">Choose a mill</label>
-			<select id = "mill-select">
+			<select id = "mill-select" onchange = "updateUI()">
 				<optgroup label = "OSBMills">
-					<option value="ALD">ALD</option>
+						<option value="ALD">ALD</option>
             <option value="BEM">BEM</option>
             <option value="BWK">BWK</option>
             <option value="CHA">CHA</option>
@@ -125,23 +119,6 @@
 		</div>
 		
 
-		<!--TAG REQUEST TABLE-->
-		<div class = "tag-request-table">
-			<table id = "tag-table">
-				<thead>
-					<tr>
-						<th>Tag Name</th>
-						<th>Data Type</th>
-						<th>PLC IP Address</th>
-						<th>Description</th>
-					</tr>
-				</thead>
-				<tbody id = "table-body">
-					
-			</table>
-		</div>
-
-
 		<!--ENTRY OPTIONS-->
 		<div class = "entry-options">
 			<div class = "manual-entry">
@@ -170,7 +147,7 @@
 			</table>
 			<div class = "table-buttons">
 				<button id = "add-row-button">Add Row</button>
-				<button id = "copy-button">Copy Table</button>'
+				<button id = "copy-button">Copy Table</button>
 				<button id = "clear-button">Clear Table</button>
 				<button id = "download-button">Download Excel Template</button>
 				<button id = "submit-button">Submit Request</button>
