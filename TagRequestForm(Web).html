@@ -652,11 +652,119 @@ function openExcelTemplate(){
   const SAWMILL_TABLES=['CanterDataTable', 'DowntimeDataTable', 'DrySorterDataTable', 'DryStackerDataTable', 'DryerDataTable', 'EdgerDataTable', 'EnergyDataTable', 'EnvironmentalDataTable', 'FuelEnergyDataTable', 'GreenSorterDataTable', 'GreenStackerDataTable', 'GreenTrimmerDataTable', 'KilnDataTable', 'MerchDataTable', 'PlanerDataTable', 'SawlineDataTable', 'ShiftEndDataTable', 'UtilityDataTable'];
   function isSawmill(){return SAWMILL_CODES.includes(document.getElementById("millSelect").value);}
 
+
+
+
+//====================================
+//KEV'S GET TABLE NAME ADDITION
+//====================================
   function getMillTables(){
     const mill=document.getElementById("millSelect").value;
     if(isSawmill()) return SAWMILL_TABLES;
     return MILL_TABLES[mill]||[];
+
+    let tableNameCache = [];
+
+    async function getTableNames() {
+
+        try {
+
+            //connect
+
+            let site = document.getElementById("millSelect").value;
+
+            let grp=0;
+
+
+
+            if (site === "") {
+
+                return;
+
+            }
+
+
+
+            document.getElementById('addRowBtn').disabled = true;
+
+            document.getElementById('millWarning').textContent = "Loading...."
+
+
+
+            const select = document.getElementById("millSelect");
+
+            const selectedOption = select.options[select.selectedIndex];
+
+
+
+            // Check if its parent optgroup is "Sawmills"
+
+            if (
+
+                selectedOption.parentElement.tagName === "OPTGROUP" &&
+
+                selectedOption.parentElement.label === "Sawmills"
+
+            ) {
+
+                grp = 1;
+
+            }
+
+            res = await fetch(`http://roc-laa01:3000/getTableNames?mill=${site}&grp=${grp}`);
+
+            tableNameCache = await res.json();
+
+
+
+            document.getElementById('millWarning').textContent = ""
+
+            document.getElementById('addRowBtn').disabled = false;
+
+
+
+            const rows = document.querySelectorAll('#tableBody tr');
+
+
+
+            for (const row of rows) {
+
+                const cell = row.querySelector('.tableSelectCell');
+
+
+
+                // Create a fresh dropdown using the new tableNameCache
+
+                const newSelect = await createTableSelect();
+
+
+
+                // Replace the old dropdown
+
+                cell.replaceChildren(newSelect);
+
+            }
+
+
+
+        }
+
+        catch (err) {
+
+            console.error(err);
+
+        }
+
+    }
+
   }
+
+
+
+
+
+
+
 
   function mkTableNameField(val){
     const wrap=document.createElement("div");wrap.style.position="relative";

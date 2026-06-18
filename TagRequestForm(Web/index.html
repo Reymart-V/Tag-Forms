@@ -107,7 +107,7 @@
                             <option value="JOA">JOA</option>
                             <option value="LAS">LAS</option>
                             <option value="NAC">NAC</option>
-                        </optgroup>
+                        </optgroup> Westfraser1!
                         <optgroup label="Sawmills">
                             <option value="NWB">NWB</option>
                             <option value="DGM">DGM</option>
@@ -126,7 +126,7 @@
                     </select>
                 </div>
                 <label class="urgent-toggle" id="urgLbl">
-                    <input type="checkbox" id="urgFlag" onchange="this.closest('.urgent-toggle').classList.toggle('on', this.checked)" />
+                    <input type="checkbox" id="urgFlag" onchange="toggleUrgent(this)" />
                     <span>Mark as urgent</span>
                 </label>
             </div>
