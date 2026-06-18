@@ -1,3 +1,13 @@
+/*
+Why 1300px? Arbitrary design choice — caps content width so it doesn't stretch uncomfortably wide on big monitors. Could be 1200 or 1400; just needs to be consistent across sections so they align.
+margin vs padding? Margin = space outside an element (pushes others away). Padding = space inside (gap between border and content). Rule of thumb: padding to give content breathing room inside a box; margin to space boxes apart.
+margin: 0 auto? 0 top/bottom, auto left/right. auto splits leftover horizontal space equally on both sides → centers the element. Only works on elements with a set width (like your max-width).
+line-height? Vertical spacing between lines of text. 1.5 = 1.5× the font size. Higher = more airy/readable.
+font-weight? Text thickness. 400 = normal, 600 = semibold, 700 = bold. (You loaded DM Sans in 400/500/600, so only those work.)
+
+*/
+
+
 /* ===================================================================
    Design tokens — define every color & size once, reuse by name.
    Change a value here and it updates everywhere it's used.
@@ -27,11 +37,11 @@
 }
 
 
-/* ===================================================================
-   Base
-   =================================================================== */
+/*=============
+  Global Styles
+  ============= */
+
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
@@ -43,9 +53,9 @@ body {
 }
 
 
-/* ===================================================================
-   Header
-   =================================================================== */
+/*=============
+  Header
+  ============= */
 .header {
   background: white;
   border-bottom: 3px solid var(--wf);
@@ -90,9 +100,9 @@ body {
 }
 
 
-/* ===================================================================
-   Page body + cards
-   =================================================================== */
+/* =================
+   Instructions
+   ================ */
 .main {
   max-width: 1300px;
   margin: 0 auto;
@@ -105,9 +115,6 @@ body {
   border-radius: var(--rl);
   margin-bottom: 20px;
   overflow: hidden;
-}
-
-.card-pad {
   padding: 20px 24px;
 }
 
@@ -120,10 +127,6 @@ body {
   margin-bottom: 14px;
 }
 
-
-/* ===================================================================
-   How-to steps
-   =================================================================== */
 .steps-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -168,9 +171,9 @@ body {
 }
 
 
-/* ===================================================================
-   Naming & data type rules
-   =================================================================== */
+/* =============
+   Naming Rules
+   ============= */
 .rules-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -201,12 +204,6 @@ body {
   gap: 4px;
 }
 
-/* The amber "BIT not permitted" callout */
-.rule-warning {
-  background: var(--warn-bg);
-  border-color: #fcd34d;
-}
-
 .rule-warning h2 {
   color: var(--warn);
 }
@@ -218,8 +215,13 @@ body {
   border-radius: 3px;
   font-family: "DM Mono", monospace;
 }
-.code-good { background: var(--wf-light); }
-.code-bad  { background: #fee2e2; }
+.code-good { 
+  background: var(--wf-light); 
+}
+
+.code-bad  { 
+  background: #fee2e2; 
+}
 
 .rules-note {
   font-size: 12px;
@@ -231,9 +233,9 @@ body {
 }
 
 
-/* ===================================================================
-   Mill selector + urgent toggle
-   =================================================================== */
+/* ==============
+   Mill Select
+   ============== */
 .mill-row {
   display: flex;
   align-items: flex-end;
@@ -247,7 +249,7 @@ body {
   gap: 5px;
 }
 
-.field label {
+.field div {
   font-size: 11px;
   font-weight: 600;
   color: var(--g500);
@@ -302,7 +304,7 @@ body {
 
 
 /* ===================================================================
-   Entry mode tabs
+   Manual Entry + Paste-from-Excel Tabs
    =================================================================== */
 .entry-tabs {
   display: flex;
@@ -359,7 +361,7 @@ body {
 
 
 /* ===================================================================
-   Paste-from-Excel panel
+   Paste-from-Excel Part
    =================================================================== */
 .paste-panel {
   display: none;                 /* shown by JS when the Paste tab is active */

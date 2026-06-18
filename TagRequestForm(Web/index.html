@@ -1,23 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
+</html>
 <head>
+    <!--===Meta Data===-->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tag Request Form — West Fraser</title>
-
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" />
 
     <!-- CSV / Excel paste parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
-    <!-- Our styles and logic -->
     <link rel="stylesheet" href="styles.css" />
     <script src="form.js" defer></script>
 </head>
 <body>
 
-    <!-- ============ HEADER ============ -->
+
+    <!-- ============ HEADER PART ============ -->
     <header class="header">
         <div class="header-inner">
             <div class="header-logo">
@@ -31,10 +32,10 @@
         </div>
     </header>
 
-    <div class="main">
 
-        <!-- ============ INSTRUCTIONS ============ -->
-        <div class="card card-pad">
+    <!-- ============ INSTRUCTIONS PART ============ -->
+    <div class="main">
+        <div class="card">
             <div class="section-label">How to submit a tag request</div>
             <div class="steps-grid">
                 <div class="step">
@@ -60,8 +61,9 @@
             </div>
         </div>
 
+
         <!-- ============ NAMING & DATA TYPE RULES ============ -->
-        <div class="card card-pad">
+        <div class="card">
             <div class="section-label">Naming &amp; data type rules</div>
             <div class="rules-grid">
                 <div class="rule">
@@ -83,11 +85,12 @@
             </p>
         </div>
 
-        <!-- ============ MILL SELECT + URGENT ============ -->
+
+        <!-- ============ MILL SELECT PART ============ -->
         <div class="card card-pad">
             <div class="mill-row">
-                <div class="field">
-                    <label for="millSelect">Mill</label>
+                <div class="field"> 
+                    <div>Mill</div>
                     <select id="millSelect" onchange="updateUI()">
                         <option value="">— Select a mill —</option>
                         <optgroup label="OSB Mills">
@@ -129,17 +132,19 @@
             </div>
         </div>
 
+
         <!-- ============ ENTRY MODE TABS ============ -->
         <div class="entry-tabs">
-            <button class="entry-tab active" id="tabManual" onclick="switchTab('manual')" disabled>
+            <button class="entry-tab active" id="manualOption" onclick="switchTab('manual')" disabled>
                 <span class="entry-tab-title">Manual entry</span>
                 <span class="entry-tab-sub">Add rows one at a time using the table below</span>
             </button>
-            <button class="entry-tab" id="tabPaste" onclick="switchTab('paste')" disabled>
+            <button class="entry-tab" id="pasteOption" onclick="switchTab('paste')" disabled>
                 <span class="entry-tab-title">Paste from Excel</span>
                 <span class="entry-tab-sub">Copy from the Excel template and import all at once</span>
             </button>
         </div>
+
 
         <!-- ============ PASTE PANEL (hidden until paste tab) ============ -->
         <div class="paste-panel" id="pastePanel">
@@ -150,10 +155,10 @@
                 </div>
                 <div class="paste-buttons">
                     <button class="btn btn-grey" onclick="openExcelTemplate()">Open Excel template</button>
-                    <button class="btn btn-primary" id="processBtn" onclick="processExcelData()" disabled>Import rows</button>
+                    <button class="btn btn-primary" id="importButton" onclick="processExcelData()" disabled>Import rows</button>
                 </div>
             </div>
-            <textarea id="pasteArea" placeholder="Select your mill first, then paste your Excel data here." disabled></textarea>
+            <textarea id="pasteTextBox" placeholder="Select your mill first, then paste your Excel data here." disabled></textarea>
             <div class="paste-hint">Tip: include the header row when copying — the importer will detect column order automatically.</div>
         </div>
 
@@ -195,17 +200,17 @@
             <textarea id="just1s" placeholder="Explain why 1-second polling is needed for these tags..."></textarea>
         </div>
 
-        <!-- ============ ACTION BAR ============ -->
+        <!-- ============ ACTION BUTTONS ============ -->
         <div class="actions">
             <div class="actions-left">
-                <button class="btn btn-grey" id="addBtn" onclick="addRow()" disabled>+ Add row</button>
-                <button class="btn btn-grey" id="clrBtn" onclick="clearAll()" disabled>Clear all</button>
-                <button class="btn btn-grey" id="chkAllBtn" onclick="toggleNT(true)" disabled>Check all new table</button>
-                <button class="btn btn-grey" id="unchkBtn" onclick="toggleNT(false)" disabled>Uncheck all new table</button>
+                <button class="btn btn-grey" id="addRow" onclick="addRow()" disabled>+ Add row</button>
+                <button class="btn btn-grey" id="clrAll" onclick="clearAll()" disabled>Clear all</button>
+                <button class="btn btn-grey" id="chkAll" onclick="toggleNT(true)" disabled>Check all new table</button>
+                <button class="btn btn-grey" id="unchkAll" onclick="toggleNT(false)" disabled>Uncheck all new table</button>
             </div>
             <div class="actions-right">
-                <button class="btn btn-grey" id="copyBtn" onclick="copyTable()" disabled>Copy table</button>
-                <button class="btn btn-submit" id="subBtn" onclick="doSubmit()" disabled>Submit request</button>
+                <button class="btn btn-grey" id="copyTable" onclick="copyTable()" disabled>Copy table</button>
+                <button class="btn btn-submit" id="submitReq" onclick="doSubmit()" disabled>Submit request</button>
             </div>
         </div>
 
