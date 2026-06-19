@@ -894,11 +894,13 @@ function openExcelTemplate(){
     return true;
   }
   function valTag(el){
+    
     clrMsg(el);
     const v=el.value.trim();
     if(!v)return true;
     if(/_/.test(v)){addMsg(el,"Avoid underscores in tag name (e.g. BladeSpeedRpm)","warn");return true;}
     return true;
+
   }
   function valNum(el,lbl){
     clrMsg(el);
