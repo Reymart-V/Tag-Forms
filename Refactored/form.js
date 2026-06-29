@@ -23,8 +23,12 @@ function updateUI() {
 
 // Make urgent button red
 function toggleUrgent(urgentBtn){
-    const label = urgentBtn.closest(".urgent-toggle");
-    label.classList.toggle("on", urgentBtn.checked);
+    if(urgentBtn.checked){
+      urgentBtn.parentElement.classList.add("on");
+    }
+    else {
+      urgentBtn.parentElement.classList.remove("on");
+    }
 }
 
 // switches to paste panel
@@ -110,6 +114,8 @@ function addRow(data = {}) {  //data {} comes from processExcelData
     rowsCount();
 
     // .tageName is the class name for <input>
+    
+    //  Functions below call validation functions
     const tagInput = row.querySelector(".tagName");
     tagInput.addEventListener("blur", function() {
         valTag(tagInput);
@@ -122,16 +128,13 @@ function addRow(data = {}) {  //data {} comes from processExcelData
     
     const minInput = row.querySelector(".min");
     minInput.addEventListener("blur", function() {
-      valNum(ipInput);
+      valNum(minInput);
     })
 
     const maxInput = row.querySelector(".max");
     maxInput.addEventListener("blur", function() {
-      valNUm(ipInput);
+      valNum(maxInput);
     })
-
-    
-
 
 }
 
@@ -219,6 +222,7 @@ function valIP(input) {
   }
 }
 
+// Checks for valid num
 function valNumber(input) {
   clrMsg(input);
 
@@ -233,11 +237,54 @@ function valNumber(input) {
     }
 }
 
-function validMin(input) {
 
+function chkDups() {
+  const rows = document.querySelectorAll("#tbody tr");
+    
+  const count = {};
+    
+  rows.forEach(function(row){ //creating dict. key = table and value    value = # of occurance
+    const tableName = (row.querySelector(".tableName")?.value || "").trim().toLowerCase();
+    const tagName = (row.querySelector(".tagName")?.value || "").trim().toLowerCase();
+    if (tag) {
+      const key = table + "|" + tag;
+      counts[key] = (counts[key] || 0) + 1;
+    }
+
+    rows.forEach(function(row) {
+      const tagInput = row.querySelector(".tagName");
+      const table = (row.querySelector(".tableName")?.value || "").trim().toLowerCase();
+      const tag   = (tagInput?.value || "").trim().toLowerCase();
+      const key   = table + "|" + tag;
+    }
+  
+});
+
+function addMsg(input, text) {
+  const msg = document.createElement("div");
+  msg.className = "msg warn"
+  msg.textContent = "text";
+  input.parentElement.appendChild(msg)
 }
+
+
+/*===================================================================
+  Fetch units from dataparc endpoint
+  =================================================================== */
+let units = [];
+async function getUnits(){
+  try {
+
+    //response = fetch(ENDPOINT)
+    units = await response.json();
+  }
+
+  catch (err) {
+    console.error(err)
+  }
+}
+
 
 
 /*============================================================================
   ============================================================================*/
-
