@@ -1,4 +1,8 @@
 
+/*===================================================================
+    UI Updates
+  =================================================================== */
+
 // Enable buttons and tabs
 function updateUI() {
 
@@ -50,39 +54,32 @@ function switchTab(mode) {
 // Downloads the excel file
 function openExcelTemplate() {
     const link = document.createElement("a");
-    link.href = "../TagReqestTemplate.xlsx";
+    link.href = "../TagRequestTemplate.xlsx";
     link.download = "../TagRequestTemplate.xlsx";
     link.click();
 }
 
-function processExcelData() {
-
-    // Uses addRow()
-    // will have data = {tableName:
-    //                   tagName:
-    //                   plcAddress: }
-}
 
 
 
 /*===================================================================
-    Functions addRow(), makeInputCell(), countRows()
+    ADD ROW RUNCTIONS (addrow(), )
   =================================================================== */
 function addRow(data = {}) {  //data {} comes from processExcelData
 
     // Adding data inputs Tag Name -> Max
     const tableBody = document.getElementById("tbody");
     const row = document.createElement("tr");
-    row.appendChild(makeInputBox("tableName", "Search or type table name...", data.tableName));
-    row.appendChild(makeInputBox("tagName", "e.g. BladeSpeedRpm", data.tagName));
-    row.appendChild(makeInputBox("plcAddress", "192.168.x.x", data.plcAddress));
-    row.appendChild(makeInputBox("plcPath", "PLC tag path", data.plcPath));
-    row.appendChild(makeInputBox("dataType", "— type —", data.dataType));
-    row.appendChild(makeInputBox("units", "— units —", data.units));
-    row.appendChild(makeInputBox("transactionFrequency", "e.g. 5 s, 1 min", data.transactionFrequency));
-    row.appendChild(makeInputBox("tagDescription", "What does this tag measure?", data.tagDescription));
-    row.appendChild(makeInputBox("min", "e.g. 0", data.min));
-    row.appendChild(makeInputBox("max", "e.g. 100", data.max));
+    row.appendChild(makeInputBoxes("tableName", "Search or type table name...", data.tableName));
+    row.appendChild(makeInputBoxes("tagName", "e.g. BladeSpeedRpm", data.tagName));
+    row.appendChild(makeInputBoxes("plcAddress", "192.168.x.x", data.plcAddress));
+    row.appendChild(makeInputBoxes("plcPath", "PLC tag path", data.plcPath));
+    row.appendChild(makeInputBoxes("dataType", "— type —", data.dataType));
+    row.appendChild(makeInputBoxes("units", "— units —", data.units));
+    row.appendChild(makeInputBoxes("transactionFrequency", "e.g. 5 s, 1 min", data.transactionFrequency));
+    row.appendChild(makeInputBoxes("tagDescription", "What does this tag measure?", data.tagDescription));
+    row.appendChild(makeInputBoxes("min", "e.g. 0", data.min));
+    row.appendChild(makeInputBoxes("max", "e.g. 100", data.max));
 
     // "Add new table?" box
     const checkBoxCell = document.createElement("td");
@@ -114,11 +111,12 @@ function addRow(data = {}) {  //data {} comes from processExcelData
     rowsCount();
 
     // .tageName is the class name for <input>
-    
-    //  Functions below call validation functions
+
+    //  ======VALIDATION FUNCTIONS=======
     const tagInput = row.querySelector(".tagName");
     tagInput.addEventListener("blur", function() {
         valTag(tagInput);
+        chkDups();
     })
 
     const ipInput = row.querySelector(".plcAddress");
@@ -136,10 +134,11 @@ function addRow(data = {}) {  //data {} comes from processExcelData
       valNum(maxInput);
     })
 
+
 }
 
 // Builds <input> and puts it into <td>
-function makeInputBox(className, placeholder, value) {
+function makeInputBoxes(className, placeholder, value) {
 
     const cell = document.createElement("td");
     const input = document.createElement("input");
@@ -156,7 +155,6 @@ function makeInputBox(className, placeholder, value) {
 function rowsCount(){
 
   const rowCount = document.querySelectorAll('#tbody tr').length;
-
   const noTagsMessage = document.getElementById("emptyState");
   noTagsMessage.style.display = rowCount === 0 ? "block" : "none";
 
@@ -166,21 +164,21 @@ function rowsCount(){
 }
 
 
+
 /*===================================================================
-    Warning Validations
+    INPUT VALIDATIONS (CHECKS WHEN TO ADD WARNING NOTES)
   =================================================================== */
-function clearMsg(input){
-  const oldMsg = input.parentElement.querySelector(".msg");
-  if (oldMsg) oldMsg.remove();   // remove the message if one exists
-  input.classList.remove("warn"); // remove amber tint from the input
-}
+
 
 // Adds warning text under data inputs
 function addWarning(input, text){
-  clearMsg(input);                            // clear any old one first
+  clearMsg(input);   
+                           // clear any old one first
   const msg = document.createElement("div");
+
   msg.className = "msg warn";
   msg.textContent = "avoid underscores in this tag";
+
   input.parentElement.appendChild(msg);       // add under the input
   input.classList.add("warn");                // tint input amber
 }
@@ -237,35 +235,58 @@ function valNumber(input) {
     }
 }
 
-
 function chkDups() {
-  const rows = document.querySelectorAll("#tbody tr");
+  const rows = document.querySelectorAll("#tbody tr"); // says, look at id toby, and see how many tablerows (tr) there are
+  const counts = {};
     
-  const count = {};
-    
-  rows.forEach(function(row){ //creating dict. key = table and value    value = # of occurance
+  rows.forEach(function (row) { //creating dict. key = table and value    value = # of occurance
     const tableName = (row.querySelector(".tableName")?.value || "").trim().toLowerCase();
     const tagName = (row.querySelector(".tagName")?.value || "").trim().toLowerCase();
-    if (tag) {
-      const key = table + "|" + tag;
-      counts[key] = (counts[key] || 0) + 1;
-    }
 
-    rows.forEach(function(row) {
-      const tagInput = row.querySelector(".tagName");
-      const table = (row.querySelector(".tableName")?.value || "").trim().toLowerCase();
-      const tag   = (tagInput?.value || "").trim().toLowerCase();
-      const key   = table + "|" + tag;
+    // Create hashmap
+    if (tagName) {
+      const key = tableName + "|" + tagName;
+      counts[key] = (counts[key] || 0) + 1;  //now we have the occurence value, the scope of this is known outside
     }
+  }); 
   
-});
+  rows.forEach(function (row) {
+    const tagInput = row.querySelector(".tagName");
+    const tableName = (row.querySelector(".tableName")?.value || "").trim().toLowerCase();
+    const tagName = (row.querySelector(".tagName")?.value || "").trim().toLowerCase();
+      
+    clearMsg(tagInput); 
 
+    const key = tableName + "|" + tagName;
+
+    if(counts[key] > 1){
+      addMsg(tagInput, "Duplicate tags are not allowed")
+    }
+  });
+}
+
+
+
+/*===================================================================
+  SUPPORT FUNCTIONS
+  =================================================================== */
+
+//Adds the warning message 
 function addMsg(input, text) {
   const msg = document.createElement("div");
   msg.className = "msg warn"
-  msg.textContent = "text";
+  msg.textContent = text;
   input.parentElement.appendChild(msg)
 }
+
+// Clears the old warning msg
+function clearMsg(input){
+  const oldMsg = input.parentElement.querySelector(".msg");
+  if (oldMsg) oldMsg.remove();   // remove the message if one exists
+  input.classList.remove("warn"); // remove amber tint from the input
+}
+
+
 
 
 /*===================================================================
@@ -282,6 +303,16 @@ async function getUnits(){
   catch (err) {
     console.error(err)
   }
+}
+
+
+
+function processExcelData() {
+
+    // Uses addRow()
+    // will have data = {tableName:
+    //                   tagName:
+    //                   plcAddress: }
 }
 
 

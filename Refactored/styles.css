@@ -37,6 +37,14 @@ font-weight? Text thickness. 400 = normal, 600 = semibold, 700 = bold. (You load
 }
 
 
+/* ###################################################################
+   #                                                                 #
+   #   PART 1 — STYLES CURRENTLY IN USE                              #
+   #   (selectors referenced in index.html or added by form.js)     #
+   #                                                                 #
+   ################################################################### */
+
+
 /*=============
   Global Styles
   ============= */
@@ -215,12 +223,12 @@ body {
   border-radius: 3px;
   font-family: "DM Mono", monospace;
 }
-.code-good { 
-  background: var(--wf-light); 
+.code-good {
+  background: var(--wf-light);
 }
 
-.code-bad  { 
-  background: #fee2e2; 
+.code-bad  {
+  background: #fee2e2;
 }
 
 .rules-note {
@@ -402,31 +410,6 @@ body {
   flex-wrap: wrap;
 }
 
-#pasteArea {
-  width: 100%;
-  min-height: 80px;
-  padding: 10px 12px;
-  border: 1.5px solid var(--g200);
-  border-radius: var(--r);
-  font-family: "DM Sans", sans-serif;
-  font-size: 12px;
-  color: var(--g900);
-  resize: vertical;
-  transition: border-color 0.15s;
-}
-
-#pasteArea:focus {
-  outline: none;
-  border-color: var(--wf);
-  box-shadow: 0 0 0 2px rgba(1, 126, 58, 0.08);
-}
-
-#pasteArea:disabled {
-  background: var(--g100);
-  color: var(--g400);
-  cursor: not-allowed;
-}
-
 .paste-hint {
   font-size: 11px;
   color: var(--g400);
@@ -590,38 +573,6 @@ tbody td {
 
 
 /* ===================================================================
-   1-second justification box
-   =================================================================== */
-.just-box {
-  display: none;                 /* shown by JS when a 1 s row exists */
-  background: var(--warn-bg);
-  border: 1px solid #fcd34d;
-  border-radius: var(--r);
-  padding: 13px 17px;
-  margin-bottom: 18px;
-}
-
-.just-box label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--warn);
-  margin-bottom: 7px;
-}
-
-.just-box textarea {
-  width: 100%;
-  min-height: 55px;
-  padding: 7px 10px;
-  border: 1px solid #fcd34d;
-  border-radius: 6px;
-  font-family: "DM Sans", sans-serif;
-  font-size: 12px;
-  resize: vertical;
-}
-
-
-/* ===================================================================
    Action buttons
    =================================================================== */
 .actions {
@@ -693,7 +644,88 @@ tbody td {
   background: #015228;
 }
 
-/* ---- Rules grid (added to match full HTML) ---- */
+
+/* ###################################################################
+   #                                                                 #
+   #   PART 2 — STYLES NOT YET USED                                  #
+   #                                                                 #
+   ################################################################### */
+
+
+/* ===================================================================
+   Paste textarea — UNUSED
+   HTML uses id="pasteTextBox", but these rules target #pasteArea.
+   Either rename these to #pasteTextBox or rename the element.
+   =================================================================== */
+#pasteArea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--g200);
+  border-radius: var(--r);
+  font-family: "DM Sans", sans-serif;
+  font-size: 12px;
+  color: var(--g900);
+  resize: vertical;
+  transition: border-color 0.15s;
+}
+
+#pasteArea:focus {
+  outline: none;
+  border-color: var(--wf);
+  box-shadow: 0 0 0 2px rgba(1, 126, 58, 0.08);
+}
+
+#pasteArea:disabled {
+  background: var(--g100);
+  color: var(--g400);
+  cursor: not-allowed;
+}
+
+
+/* ===================================================================
+   1-second justification box — UNUSED
+   .just-box markup exists in HTML (id="justBox") but is never shown;
+   no .just-box CLASS toggling happens in form.js yet.
+   (Move to PART 1 once the justification logic is wired up.)
+   =================================================================== */
+.just-box {
+  display: none;                 /* shown by JS when a 1 s row exists */
+  background: var(--warn-bg);
+  border: 1px solid #fcd34d;
+  border-radius: var(--r);
+  padding: 13px 17px;
+  margin-bottom: 18px;
+}
+
+.just-box label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--warn);
+  margin-bottom: 7px;
+}
+
+.just-box textarea {
+  width: 100%;
+  min-height: 55px;
+  padding: 7px 10px;
+  border: 1px solid #fcd34d;
+  border-radius: 6px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 12px;
+  resize: vertical;
+}
+
+
+/* ===================================================================
+   Duplicate rules-grid block — UNUSED / SHADOWED
+   These re-declare .rules-grid, .rule, .row-counter (already defined
+   above) and add classes the HTML never uses: .rule-warn, .rule-title,
+   .rule-note, .paste-heading, .paste-sub, .paste-actions.
+   The HTML uses .rule-warning, .rules-note, .paste-title, .paste-subtitle,
+   .paste-buttons instead. Safe to delete unless you switch the markup.
+   =================================================================== */
 .rules-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
